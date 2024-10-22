@@ -13,6 +13,7 @@ namespace PDFDict.SDK.Sharp.Sample
 
             PDFSharpLib.Initialize();
 
+            ReadTags();
             // InsertPageAsImage();
             // FillForm();
             // RenderPDF();
@@ -22,9 +23,15 @@ namespace PDFDict.SDK.Sharp.Sample
             //Sample.ReadDocumentProperties();
             //Sample.CreatePDF_Graphics();
             //Sample.ExtractImages();
-            Sample.DrawText();
+            //Sample.DrawText();
 
             Console.WriteLine("Sample case completed");
+        }
+
+        private static void ReadTags()
+        {
+            string input = Path.Combine(Environment.CurrentDirectory, @"files\pdf\FlyerPDFUA-en2015.pdf");
+            PDFTools.GetTags(input);
         }
 
         private static void AddPageAsXObject()

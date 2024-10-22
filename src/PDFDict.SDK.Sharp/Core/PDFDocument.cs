@@ -306,7 +306,11 @@ namespace PDFDict.SDK.Sharp.Core
                 page.Close();
             }
 
-            fpdfview.FPDF_CloseDocument(_pdfDocPtr);
+            if (_pdfDocPtr != null)
+            {
+                fpdfview.FPDF_CloseDocument(_pdfDocPtr);
+                _pdfDocPtr = null;
+            }
         }
 
         public void Dispose()

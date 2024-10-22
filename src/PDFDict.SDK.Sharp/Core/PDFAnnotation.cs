@@ -59,7 +59,7 @@ namespace PDFDict.SDK.Sharp.Core
                     var len = fpdf_annot.FPDFAnnotGetFormFieldName(_formHandle, _annotationHandle, ref ((ushort*)buf)[0], (uint)maxByteCount);
                     return (int)len;
                 };
-                FieldName = UnsafeRead_UTF16_LE(nativeFunc);
+                FieldName = NativeStringReader.UnsafeRead_UTF16_LE(nativeFunc);
             }
         }
 
@@ -75,46 +75,6 @@ namespace PDFDict.SDK.Sharp.Core
         }
 
         public abstract string GetDisplayText();
-
-        public static string UnsafeRead_UTF16_LE(Func<IntPtr, int, int> nativeFunc)
-        {
-            unsafe
-            {
-                int defaultByteCount = 512;
-                IntPtr ptr = Marshal.AllocHGlobal(defaultByteCount);
-                try
-                {
-                    var len = nativeFunc(ptr, defaultByteCount);
-
-                    if (len > defaultByteCount)
-                    {
-                        Marshal.FreeHGlobal(ptr);
-                        ptr = Marshal.AllocHGlobal(len);
-                        len = nativeFunc(ptr, len);
-                    }
-                    if (len == 0)
-                    {
-                        return string.Empty;
-                    }
-
-                    if (len % 2 != 0)
-                    {
-                        throw new ArgumentException($"Bytes buf(encoded in UTF-16LE) length must be even instead of {len}");
-                    }
-
-                    if (len == 2)
-                    {
-                        return string.Empty;
-                    }
-                    string s = Marshal.PtrToStringUni(ptr, len / 2 - 1);
-                    return s;
-                }
-                finally
-                {
-                    Marshal.FreeHGlobal(ptr);
-                }
-            }
-        }
     }
 
     public class PDFWidget : PDFAnnotation
@@ -138,7 +98,7 @@ namespace PDFDict.SDK.Sharp.Core
                     var len = fpdf_annot.FPDFAnnotGetFormFieldValue(_formHandle, _annotationHandle, ref ((ushort*)buf)[0], (uint)maxByteCount);
                     return (int)len;
                 };
-                FieldValue = UnsafeRead_UTF16_LE(nativeFunc);
+                FieldValue = NativeStringReader.UnsafeRead_UTF16_LE(nativeFunc);
             }
         }
 
@@ -157,7 +117,7 @@ namespace PDFDict.SDK.Sharp.Core
                     var len = fpdf_annot.FPDFAnnotGetAP(_annotationHandle, 0, ref ((ushort*)buf)[0], (uint)maxByteCount);
                     return (int)len;
                 };
-                AppearanceStreams = UnsafeRead_UTF16_LE(nativeFunc);
+                AppearanceStreams = NativeStringReader.UnsafeRead_UTF16_LE(nativeFunc);
             }
         }
 
@@ -235,7 +195,7 @@ namespace PDFDict.SDK.Sharp.Core
                     var len = fpdf_annot.FPDFAnnotGetStringValue(_annotationHandle, "RC", ref ((ushort*)buf)[0], (uint)maxByteCount);
                     return (int)len;
                 };
-                RichText = UnsafeRead_UTF16_LE(nativeFunc);
+                RichText = NativeStringReader.UnsafeRead_UTF16_LE(nativeFunc);
             }
         }
 
@@ -265,7 +225,7 @@ namespace PDFDict.SDK.Sharp.Core
                     var len = fpdf_annot.FPDFAnnotGetStringValue(_annotationHandle, "Contents", ref ((ushort*)buf)[0], (uint)maxByteCount);
                     return (int)len;
                 };
-                Text = UnsafeRead_UTF16_LE(nativeFunc);
+                Text = NativeStringReader.UnsafeRead_UTF16_LE(nativeFunc);
             }
         }
 

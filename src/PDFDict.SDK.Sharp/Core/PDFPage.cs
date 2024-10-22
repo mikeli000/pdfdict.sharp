@@ -4,7 +4,7 @@ using System.Text;
 
 namespace PDFDict.SDK.Sharp.Core
 {
-    public sealed class PDFPage
+    public sealed class PDFPage: IDisposable
     {
         private FpdfPageT _pagePtr;
         private PDFDocument _pdfDoc;
@@ -333,7 +333,13 @@ namespace PDFDict.SDK.Sharp.Core
             if (_pagePtr != null)
             {
                 fpdfview.FPDF_ClosePage(_pagePtr);
+                _pagePtr = null;
             }
+        }
+
+        public void Dispose()
+        {
+            Close();
         }
     }
 
