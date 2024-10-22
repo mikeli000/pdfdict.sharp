@@ -1,0 +1,120 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - { os: ubuntu-22.04, platform: x64, cxx: g++-11, cc: gcc-11 }
+          - { os: macos-11, platform: x64, cxx: clang++, cc: clang }
+          - { os: windows-2022, platform: x64, vs: "Program Files/Microsoft Visual Studio/2022" }
+
+    runs-on: ${{ matrix.config.os }}
+
+    env:
+      CC: ${{ matrix.config.cc }}
+      CXX: ${{ matrix.config.cxx }}
+      VS_VERSION: ${{ matrix.config.vs }}
+      PLATFORM: ${{ matrix.config.platform }}
+      DOTNET_NOLOGO: true
+      DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: '0'
+
+      - name: Install nbgv
+        if: startsWith(matrix.config.os, 'macos')
+        run: |
+          dotnet tool install -g nbgv
+
+      - name: Set version
+        run: nbgv cloud --all-vars
+
+      - name: Environment
+        if: matrix.config.vs
+        shell: bash
+        run: echo "/c/$VS_VERSION/Enterprise/MSBuild/Current/Bin" >> $GITHUB_PATH
+
+      - name: Setup
+        shell: bash
+        run: |
+          build/build.sh generate -platform $PLATFORM
+          build/build.sh download_llvm -platform $PLATFORM
+
+      - name: Restore
+        shell: bash
+        run: build/build.sh restore -platform $PLATFORM
+
+      - name: Build
+        shell: bash
+        run: build/build.sh -platform $PLATFORM -build_only
+
+      - name: Test
+        shell: bash
+        run: build/test.sh -platform $PLATFORM
+
+      - name: Pack
+        shell: bash
+        run: build/build.sh prepack -platform $PLATFORM
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: intermediate
+          path: |
+            artifacts
+            include/**/*.h
+
+  create_package:
+    runs-on: windows-2019
+    needs: build
+    if: |
+      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || contains(github.ref, 'nuget') || startsWith(github.ref, 'refs/tags/v'))) ||
+      (github.event.pull_request.head.repo.full_name != github.repository && (contains(github.event.pull_request.head.ref, 'nuget') || startsWith(github.event.pull_request.head.ref, 'refs/tags/v')))
+
+    env:
+      DOTNET_NOLOGO: true
+      DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: '0'
+
+      - name: Set version
+        run: nbgv cloud --all-vars
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: intermediate
+
+      - name: Setup
+        shell: bash
+        run: build/build.sh generate_config
+
+      - name: Create package
+        shell: bash
+        run: build/build.sh pack
+
+      - name: Upload package
+        uses: actions/upload-artifact@v3
+        with:
+          name: CppSharp.nupkg
+          path: |
+            artifacts/*.nupkg
+
+      - name: Upload package to GitHub Packages
+        run: |
+          cd artifacts
+          dotnet nuget push "*.nupkg" --api-key ${{ secrets.GITHUB_TOKEN }} --source "https://nuget.pkg.github.com/mono/index.json" --skip-duplicate
+
+      - name: Publish package to nuget.org
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          cd artifacts
+          dotnet nuget push "*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source "https://api.nuget.org/v3/index.json" --skip-duplicate

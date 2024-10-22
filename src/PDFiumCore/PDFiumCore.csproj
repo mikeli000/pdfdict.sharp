@@ -1,0 +1,41 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.1;net5.0;net6.0</TargetFrameworks>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/Dtronix/PDFiumCore</PackageProjectUrl>
+    <Description>PDFiumCore is a wrapper for pinvoke bindings to allow for direct PDFium usage in all languages which support .NET Standard 2.1. Includes the runtime native binary files for Linux-x64, Osx-x64, Win-x86 &amp; Win-x64 targets.</Description>
+    <PackageTags>pinvoke dotnet interop pdf pdfium</PackageTags>
+    <RepositoryUrl>https://github.com/Dtronix/PDFiumCore</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <Authors>DJGosnell</Authors>
+	<PackageIcon>icon.png</PackageIcon>
+    <DocumentationFile>PDFiumCore.xml</DocumentationFile>
+    <OutputPath>$(SolutionDir)/artifacts/</OutputPath>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="bblanchon.PDFium.Linux" Version="124.0.6337" />
+    <PackageReference Include="bblanchon.PDFium.macOS" Version="124.0.6337" />
+    <PackageReference Include="bblanchon.PDFium.Win32" Version="124.0.6337" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" Condition="'$(TargetFramework)' == 'netstandard2.1'" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\CppSharp\src\Runtime\MarshalUtil.cs" Link="CppSharp\MarshalUtil.cs" />
+    <Compile Include="..\CppSharp\src\Runtime\Pointer.cs" Link="CppSharp\Pointer.cs" />
+    <Compile Include="..\CppSharp\src\Runtime\SafeUnmanagedMemoryHandle.cs" Link="CppSharp\SafeUnmanagedMemoryHandle.cs" />
+    <Compile Include="..\CppSharp\src\Runtime\SymbolResolver.cs" Link="CppSharp\SymbolResolver.cs" />
+    <Compile Include="..\CppSharp\src\Runtime\UTF32Marshaller.cs" Link="CppSharp\UTF32Marshaller.cs" />
+    <Compile Include="..\CppSharp\src\Runtime\UTF8Marshaller.cs" Link="CppSharp\UTF8Marshaller.cs" />
+    <Compile Include="..\CppSharp\src\Runtime\VTables.cs" Link="CppSharp\VTables.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="icon.png" Pack="true" PackagePath="" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,46 @@
+name: LLVM
+
+on:
+    workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - { os: ubuntu-22.04, platform: x64, cxx: g++-11, cc: gcc-11 }
+          - { os: ubuntu-22.04, platform: arm64, cxx: g++-11, cc: gcc-11 }
+          - { os: macos-11, platform: x64, cxx: clang++, cc: clang }
+          - { os: macos-12, platform: x64, cxx: clang++, cc: clang }
+          - { os: macos-12, platform: arm64, cxx: clang++, cc: clang }
+
+    runs-on: ${{ matrix.config.os }}
+
+    env:
+      CC: ${{ matrix.config.cc }}
+      CXX: ${{ matrix.config.cxx }}
+      PLATFORM: ${{ matrix.config.platform }}
+      ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: lukka/get-cmake@latest
+
+      - name: Clone LLVM
+        shell: bash
+        run: build/build.sh clone_llvm
+          
+      - name: Build LLVM
+        shell: bash
+        run: build/build.sh build_llvm -platform $PLATFORM
+
+      - name: Package LLVM
+        shell: bash
+        run: build/build.sh package_llvm -platform $PLATFORM
+
+      - name: 'Upload Artifact'
+        uses: actions/upload-artifact@v3
+        with:
+          name: llvm
+          path: build/llvm/llvm-*-*.*
