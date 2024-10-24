@@ -28,8 +28,30 @@ namespace PDFDict.SDK.Sharp.Tools
                     for (int j = 0; j < count; j++)
                     {
                         var structElement = structTree.GetChild(j);
-                        Console.WriteLine(structElement.AltText);
+                        TransStructElement(structElement);
                     }
+                }
+            }
+        }
+
+        private static void TransStructElement(PDFStructElement structElement)
+        {
+            if (structElement.ChildCount == -1)
+            {
+                return;
+            }
+            
+            if (structElement.ChildCount == 0)
+            {
+                Console.WriteLine(structElement);
+            }
+            else
+            {
+                Console.WriteLine(structElement);
+                for (int i = 0; i < structElement.ChildCount; i++)
+                {
+                    var child = structElement.GetChild(i);
+                    TransStructElement(child);
                 }
             }
         }

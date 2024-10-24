@@ -30,7 +30,7 @@ namespace PDFDict.SDK.Sharp.Sample
 
         private static void ReadTags()
         {
-            string input = Path.Combine(Environment.CurrentDirectory, @"files\pdf\FlyerPDFUA-en2015.pdf");
+            string input = Path.Combine(Environment.CurrentDirectory, @"files\pdf\pdfua\FlyerPDFUA-en2015.pdf");
             PDFTools.GetTags(input);
         }
 
