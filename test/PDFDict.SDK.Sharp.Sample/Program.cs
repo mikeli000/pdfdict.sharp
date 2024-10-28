@@ -13,7 +13,8 @@ namespace PDFDict.SDK.Sharp.Sample
 
             PDFSharpLib.Initialize();
 
-            ReadTags();
+            ExtractImages();
+            // ReadTags();
             // InsertPageAsImage();
             // FillForm();
             // RenderPDF();
@@ -26,6 +27,14 @@ namespace PDFDict.SDK.Sharp.Sample
             //Sample.DrawText();
 
             Console.WriteLine("Sample case completed");
+        }
+
+
+        private static void ExtractImages()
+        {
+            string input = Path.Combine(Environment.CurrentDirectory, @"files\pdf\img_cn.pdf");
+            Console.WriteLine(Path.Combine(Environment.CurrentDirectory, @"files\img"));
+            PDFTools.ExtractImages(input, "png", Path.Combine(Environment.CurrentDirectory, @"files\img"));
         }
 
         private static void ReadTags()
