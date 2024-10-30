@@ -5,7 +5,10 @@ namespace PDFDict.SDK.Sharp.Core.OCR
 {
     public static class TesseractOCR
     {
-        public static OCRResult ExtractText(string imagePath)
+        public static string Lang_EN = "eng";
+        public static string Lang_ChineseSimple = "chi_sim";
+
+        public static OCRResult OCRText(string imagePath, string lang = "eng")
         {
             string tessDataPath = ConfigTesseractDataPath();
 
@@ -14,7 +17,7 @@ namespace PDFDict.SDK.Sharp.Core.OCR
                 throw new DirectoryNotFoundException($"Tesseract data path {tessDataPath} not found");
             }
 
-            using var engine = new TesseractEngine(tessDataPath, "chi_sim", EngineMode.Default);
+            using var engine = new TesseractEngine(tessDataPath, Lang_ChineseSimple, EngineMode.Default);
             using var img = Pix.LoadFromFile(imagePath);
 
             using var page = engine.Process(img);
