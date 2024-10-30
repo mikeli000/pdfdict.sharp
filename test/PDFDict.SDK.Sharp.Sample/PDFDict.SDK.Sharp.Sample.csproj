@@ -9,9 +9,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\pdfdict.sdk.sharp\PDFDict.SDK.Sharp.csproj" />
+    <ProjectReference Include="..\..\src\PDFDict.SDK.Sharp\PDFDict.SDK.Sharp.csproj" />
   </ItemGroup>
-	
+
     <ItemGroup>
       <None Update="files\**\*.*">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Reflection;
 using Tesseract;
 
 namespace PDFDict.SDK.Sharp.Core.OCR
@@ -12,9 +8,10 @@ namespace PDFDict.SDK.Sharp.Core.OCR
         public static OCRResult ExtractText(string imagePath)
         {
             string tessDataPath = ConfigTesseractDataPath();
-            if (!System.IO.Directory.Exists(tessDataPath))
+
+            if (!Directory.Exists(tessDataPath))
             {
-                throw new System.IO.DirectoryNotFoundException("Tesseract data path not found");
+                throw new DirectoryNotFoundException($"Tesseract data path {tessDataPath} not found");
             }
 
             using var engine = new TesseractEngine(tessDataPath, "chi_sim", EngineMode.Default);
@@ -39,7 +36,7 @@ namespace PDFDict.SDK.Sharp.Core.OCR
 
         private static string ConfigTesseractDataPath()
         {
-            string tessDataPath = Path.Combine(Environment.CurrentDirectory, "Config/tessdata");
+            string tessDataPath = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "Config/tessdata");
             return tessDataPath;
         }
     }

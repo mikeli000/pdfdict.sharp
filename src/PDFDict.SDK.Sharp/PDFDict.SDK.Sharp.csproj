@@ -19,8 +19,8 @@
   </ItemGroup>
 	
     <ItemGroup>
-	    <PackageReference Include="QRCoder" Version="1.4.2" />
-	    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.4" />
+	    <PackageReference Include="QRCoder" Version="1.6.0" />
+	    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.5" />
 	    <PackageReference Include="System.Drawing.Common" Version="8.0.2" />
 	    <PackageReference Include="Teronis.MSBuild.Packaging.ProjectBuildInPackage" Version="1.0.0">
 	      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -31,11 +31,21 @@
 		<PackageReference Include="bblanchon.PDFium.macOS" Version="124.0.6337" />
 		<PackageReference Include="bblanchon.PDFium.Win32" Version="124.0.6337" />
 		<PackageReference Include="Tesseract" Version="5.2.0" />
+		<PackageReference Include="Tesseract.Drawing" Version="5.2.0" />
     </ItemGroup>
 
 	<ItemGroup>
 		<None Update="Config\**\*.*">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</None>
+		</None>		
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="x64\libleptonica-1.82.0.so">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	  <None Update="x64\libtesseract50.so">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
 	</ItemGroup>
 </Project>

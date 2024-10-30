@@ -9,10 +9,11 @@ namespace PDFDict.SDK.Sharp.Sample
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Run sample:");
+            Console.WriteLine("Run ExtractImages sample:");
 
             PDFSharpLib.Initialize();
 
+            // ExtractText();
             ExtractImages();
             // ReadTags();
             // InsertPageAsImage();
@@ -32,39 +33,39 @@ namespace PDFDict.SDK.Sharp.Sample
 
         private static void ExtractImages()
         {
-            string input = Path.Combine(Environment.CurrentDirectory, @"files\pdf\img_cn.pdf");
-            Console.WriteLine(Path.Combine(Environment.CurrentDirectory, @"files\img"));
-            PDFTools.ExtractImages(input, "png", Path.Combine(Environment.CurrentDirectory, @"files\img"));
+            string input = Path.Combine(Environment.CurrentDirectory, @"files/pdf/FlyerPDFUA-en2015.pdf");
+            Console.WriteLine(Path.Combine(Environment.CurrentDirectory, @"files/img"));
+            PDFTools.ExtractImages(input, "png", Path.Combine(Environment.CurrentDirectory, @"files/img"));
         }
 
         private static void ReadTags()
         {
-            string input = Path.Combine(Environment.CurrentDirectory, @"files\pdf\pdfua\FlyerPDFUA-en2015.pdf");
+            string input = Path.Combine(Environment.CurrentDirectory, @"files/pdf/pdfua/FlyerPDFUA-en2015.pdf");
             PDFTools.GetTags(input);
         }
 
         private static void AddPageAsXObject()
         {
-            string src = Path.Combine(Environment.CurrentDirectory, @"files\pdf\zh_cn.pdf");
-            string input = Path.Combine(Environment.CurrentDirectory, @"files\pdf\FlyerPDFUA-en2015.pdf");
+            string src = Path.Combine(Environment.CurrentDirectory, @"files/pdf/zh_cn.pdf");
+            string input = Path.Combine(Environment.CurrentDirectory, @"files/pdf/FlyerPDFUA-en2015.pdf");
 
-            string output = Path.Combine(Environment.CurrentDirectory, @"files\pdf\output.pdf");
+            string output = Path.Combine(Environment.CurrentDirectory, @"files/pdf/output.pdf");
             Console.WriteLine($"{output}");
             PDFTools.AddPageAsXObject(src, 0, input, 1, output, new Rectangle(100, 100, 200, 300), ImageFitting.AutoFit);
         }
 
         private static void FillForm()
         {
-            string src = Path.Combine(Environment.CurrentDirectory, @"files\pdf\forms\acroform.pdf");
-            string dest = Path.Combine(Environment.CurrentDirectory, @"files\pdf\forms\acroform_filled.pdf");
+            string src = Path.Combine(Environment.CurrentDirectory, @"files/pdf/forms/acroform.pdf");
+            string dest = Path.Combine(Environment.CurrentDirectory, @"files/pdf/forms/acroform_filled.pdf");
             Console.WriteLine($"{dest}");
 
-            PDFTools.FillForm(src, 0, "TextField", "HHinz Mustermann\0", dest);
+            PDFTools.FillForm(src, 0, "TextField", "HHinz Mustermann/0", dest);
         }
 
         private static void ReadAnnots()
         {
-            string src = Path.Combine(Environment.CurrentDirectory, @"files\pdf\forms\acroform.pdf");
+            string src = Path.Combine(Environment.CurrentDirectory, @"files/pdf/forms/acroform.pdf");
 
             var annots = PDFTools.ExtractAnnots(src);
             foreach (var pageAnnot in annots)
@@ -85,17 +86,17 @@ namespace PDFDict.SDK.Sharp.Sample
 
         private static void AddQRCode()
         {
-            string src = Path.Combine(Environment.CurrentDirectory, @"files\pdf\FlyerPDFUA-en2015.pdf");
-            string output = Path.Combine(Environment.CurrentDirectory, @"files\pdf\FlyerPDFUA-en2015-qrcode.pdf");
-            string icon = Path.Combine(Environment.CurrentDirectory, @"files\img\powerpoint_icon.png");
+            string src = Path.Combine(Environment.CurrentDirectory, @"files/pdf/FlyerPDFUA-en2015.pdf");
+            string output = Path.Combine(Environment.CurrentDirectory, @"files/pdf/FlyerPDFUA-en2015-qrcode.pdf");
+            string icon = Path.Combine(Environment.CurrentDirectory, @"files/img/powerpoint_icon.png");
             Console.WriteLine($"{output}");
             PDFTools.AddQRCode(src, "pdfdict add barcode sample", new Rectangle(100, 100, 200, 200), output, icon);
         }
 
         private static void RenderFormsPDF(bool grayscale = false)
         {
-            string pdf = Path.Combine(Environment.CurrentDirectory, @"files\pdf\forms\acroform.pdf");
-            string outputFolder = Path.Combine(Environment.CurrentDirectory, @"files\pdf\images");
+            string pdf = Path.Combine(Environment.CurrentDirectory, @"files/pdf/forms/acroform.pdf");
+            string outputFolder = Path.Combine(Environment.CurrentDirectory, @"files/pdf/images");
             Console.WriteLine($"{outputFolder}");
             if (grayscale)
             {
@@ -109,8 +110,8 @@ namespace PDFDict.SDK.Sharp.Sample
 
         private static void RenderPDF(bool grayscale = false)
         {
-            string pdf = Path.Combine(Environment.CurrentDirectory, @"files\pdf\forms\acroform_filled.pdf");
-            string outputFolder = Path.Combine(Environment.CurrentDirectory, @"files\pdf\images");
+            string pdf = Path.Combine(Environment.CurrentDirectory, @"files/pdf/forms/acroform.pdf");
+            string outputFolder = Path.Combine(Environment.CurrentDirectory, @"files/pdf/images");
             Console.WriteLine($"{outputFolder}");
             if (grayscale)
             {
@@ -124,17 +125,17 @@ namespace PDFDict.SDK.Sharp.Sample
 
         private static void SplitPDF()
         {
-            string pdf = Path.Combine(Environment.CurrentDirectory, @"files\pdf\BrightCarbon-Interactive-PDF.pdf");
-            string outputFolder = Path.Combine(Environment.CurrentDirectory, @"files\pdf\split");
+            string pdf = Path.Combine(Environment.CurrentDirectory, @"files/pdf/BrightCarbon-Interactive-PDF.pdf");
+            string outputFolder = Path.Combine(Environment.CurrentDirectory, @"files/pdf/split");
             var pageIndexList = new List<int[]> { new int[] { 0, 1 }, new int[] { 2, 3 } };
             PDFTools.SplitPDF(pdf, pageIndexList, outputFolder);
         }
 
         private static void MergePDF()
         {
-            string pdf1 = Path.Combine(Environment.CurrentDirectory, @"files\pdf\FlyerPDFUA-en2015.pdf");
-            string pdf2 = Path.Combine(Environment.CurrentDirectory, @"files\pdf\BrightCarbon-Interactive-PDF.pdf");
-            string output = Path.Combine(Environment.CurrentDirectory, @"files\pdf\merged.pdf");
+            string pdf1 = Path.Combine(Environment.CurrentDirectory, @"files/pdf/FlyerPDFUA-en2015.pdf");
+            string pdf2 = Path.Combine(Environment.CurrentDirectory, @"files/pdf/BrightCarbon-Interactive-PDF.pdf");
+            string output = Path.Combine(Environment.CurrentDirectory, @"files/pdf/merged.pdf");
 
             var pdfFiles = new Dictionary<string, int[]> { { pdf1, null }, { pdf2, new int[] { 1, 4, 5} } };
             PDFTools.MergePDF(pdfFiles, output);
@@ -142,11 +143,11 @@ namespace PDFDict.SDK.Sharp.Sample
 
         private static void ExtractText()
         {
-            string pdf = Path.Combine(Environment.CurrentDirectory, @"files\pdf\FlyerPDFUA-en2015.pdf");
+            string pdf = Path.Combine(Environment.CurrentDirectory, @"files/pdf/ocr/jd invoice.pdf");
             var pageTexts = PDFTools.ExtractText(pdf);
             foreach (var pageText in pageTexts)
             {
-                Console.WriteLine($"--- Page {pageText.Key} text: \n {pageText.Value}");
+                Console.WriteLine($"--- Page {pageText.Key} text: /n {pageText.Value}");
             }
         }
     }

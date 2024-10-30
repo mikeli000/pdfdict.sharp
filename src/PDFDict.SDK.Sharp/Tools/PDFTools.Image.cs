@@ -32,25 +32,35 @@ namespace PDFDict.SDK.Sharp.Tools
                 int pageCount = pdfDoc.GetPageCount();
                 Console.WriteLine($"Page count: {pageCount}");
 
-                for (int i = 0; i < pageCount; i++)
-                {
-                    var pdfPage = pdfDoc.LoadPage(i);
+                string img = Path.Combine(outputDir, "page0.jpg");
+                pdfDoc.RenderPage(img, 0, 300f, null, 0);
+                var res = TesseractOCR.ExtractText(img);
+                Console.WriteLine($"OCR result: {res.Text}");
+                Console.WriteLine($"OCR Confidence: {res.Confidence}");
 
-                    var images = pdfPage.GetImages();
-                    for (int j = 0; j < images.Length; j++)
-                    {
-                        using (images[j])
-                        {
-                            Console.WriteLine($"--- Page {i + 1} image {j + 1}: {images[j].GetWidth()}x{images[j].GetHeight()}");
-                            string imagePath = Path.Combine(outputDir, @$"page{i + 1}_image{j + 1}.{imgFormat}");
-                            images[j].Save(imagePath);
 
-                            var res = TesseractOCR.ExtractText(imagePath);
-                            Console.WriteLine($"--- Page {i + 1} image {j + 1} OCR result: {res.Text}");
-                        }
-                    }
-                    Console.WriteLine($"--- Page {i + 1} image count: {images.Length}");
-                }
+
+                //for (int i = 0; i < pageCount; i++)
+                //{
+                //    var pdfPage = pdfDoc.LoadPage(i);
+
+
+                //    var images = pdfPage.GetImages();
+                //    for (int j = 0; j < images.Length; j++)
+                //    {
+                //        using (images[j])
+                //        {
+                //            Console.WriteLine($"--- Page {i + 1} image {j + 1}: {images[j].GetWidth()}x{images[j].GetHeight()}");
+                //            string imagePath = Path.Combine(outputDir, @$"page{i + 1}_image{j + 1}.{imgFormat}");
+                //            images[j].Save(imagePath);
+
+                //            var res = TesseractOCR.ExtractText(imagePath);
+                //            Console.WriteLine($"--- Page {i + 1} image {j + 1} OCR result: {res.Text}");
+                //            Console.WriteLine($"--- Page {i + 1} image {j + 1} OCR confidence: {res.Confidence}");
+                //        }
+                //    }
+                //    Console.WriteLine($"--- Page {i + 1} image count: {images.Length}");
+                //}
             }
         }
 

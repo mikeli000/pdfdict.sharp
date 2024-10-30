@@ -41,12 +41,13 @@ namespace PDFDict.SDK.Sharp.Tools
 
         private static Bitmap GenerateBarcode(string text, Bitmap? iconImage = null)
         {
-            QRCodeGenerator qrGenerator = new QRCodeGenerator();
-            QRCodeData qrCodeData = qrGenerator.CreateQrCode(text, QRCodeGenerator.ECCLevel.Q);
-            QRCode qrCode = new QRCode(qrCodeData);
-            Bitmap qrCodeImage = qrCode.GetGraphic(10, Color.DarkGoldenrod, Color.White, iconImage);
+            return null;
+            //QRCodeGenerator qrGenerator = new QRCodeGenerator();
+            //QRCodeData qrCodeData = qrGenerator.CreateQrCode(text, QRCodeGenerator.ECCLevel.Q);
+            //QRCode qrCode = new QRCode(qrCodeData);
+            //Bitmap qrCodeImage = qrCode.GetGraphic(10, Color.DarkGoldenrod, Color.White, iconImage);
 
-            return qrCodeImage;
+            //return qrCodeImage;
         }
     }
 }
