@@ -68,7 +68,42 @@ namespace PDFDict.SDK.Sharp.Core
             for (int i = 0; i < charCount; i++)
             {
                 var c = fpdf_text.FPDFTextGetUnicode(pageTextPtr, i);
+
+                double left = 0, right = 0, bottom = 0, top = 0;
+                int ret = fpdf_text.FPDFTextGetCharBox(pageTextPtr, i, ref left, ref right, ref bottom, ref top);
+                if (ret > 0)
+                {
+                    Console.WriteLine($"Char {i}: {c} ({left}, {right}, {bottom}, {top})");
+
+                    //this.DrawRect(new Rectangle((int)left, (int)bottom, (int)(right - left), (int)(top - bottom)), new GraphicsState { Stroke = true, Fill = false, StrokeColor = Color.Red, StrokeWidth = 1 });
+                }
+
                 buf.Append((char)c);
+            }
+
+            int rectCount = fpdf_text.FPDFTextCountRects(pageTextPtr, 0, charCount);
+            for (int i = 0; i < rectCount; i++)
+            {
+                double left = 0, right = 0, bottom = 0, top = 0;
+                int ret = fpdf_text.FPDFTextGetRect(pageTextPtr, i, ref left, ref top, ref right, ref bottom);
+                if (ret > 0)
+                {
+                    Console.WriteLine($"Rect {i}: ({left}, {right}, {bottom}, {top})");
+
+                    var rect = new RectangleF((float)left, (float)top, (float)(right - left), (float)(bottom - top));
+                    this.DrawRect(rect, new GraphicsState { Stroke = true, Fill = false, StrokeColor = Color.Blue, StrokeWidth = 0.5f });
+
+                    unsafe
+                    {
+                        Func<IntPtr, int, int> nativeFunc = (buf, maxByteCount) =>
+                        {
+                            var len = fpdf_text.FPDFTextGetBoundedText(pageTextPtr, left, top, right, bottom, ref ((ushort*)buf)[0], maxByteCount);
+                            return (int)len;
+                        };
+                        string chars = NativeStringReader.UnsafeRead_UTF16_LE_2(nativeFunc);
+                        Console.WriteLine($"Text in rect {i}: {chars}");
+                    }
+                }
             }
 
             return buf.ToString();
@@ -119,6 +154,22 @@ namespace PDFDict.SDK.Sharp.Core
         }
 
         public void DrawRect(Rectangle rect, GraphicsState gState)
+        {
+            float x = rect.X;
+            float y = rect.Y;
+            float w = rect.Width;
+            float h = rect.Height;
+
+            BeginGraphics(gState);
+            BeginPath(x, y);
+            LineTo(x, y + h);
+            LineTo(x + w, y + h);
+            LineTo(x + w, y);
+            ClosePath();
+            EndGraphics();
+        }
+
+        public void DrawRect(RectangleF rect, GraphicsState gState)
         {
             float x = rect.X;
             float y = rect.Y;

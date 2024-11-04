@@ -49,6 +49,43 @@ namespace PDFDict.SDK.Sharp.Core
             }
         }
 
+        public static string UnsafeRead_UTF16_LE_2(Func<IntPtr, int, int> nativeFuncWithCharCountReturn)
+        {
+            unsafe
+            {
+                int defaultByteCount = 512;
+                IntPtr ptr = Marshal.AllocHGlobal(defaultByteCount);
+                try
+                {
+                    var charCount = nativeFuncWithCharCountReturn(ptr, defaultByteCount);
+                    charCount = charCount * 2; // charCount is the number of characters, not bytes
+
+                    if (charCount > defaultByteCount)
+                    {
+                        Marshal.FreeHGlobal(ptr);
+                        ptr = Marshal.AllocHGlobal(charCount);
+                        charCount = nativeFuncWithCharCountReturn(ptr, charCount);
+                    }
+                    if (charCount == 0)
+                    {
+                        return string.Empty;
+                    }
+
+                    if (charCount % 2 != 0)
+                    {
+                        throw new ArgumentException($"Bytes buf(encoded in UTF-16LE) length must be even instead of {charCount}");
+                    }
+
+                    string s = Marshal.PtrToStringUni(ptr, charCount / 2);
+                    return s;
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(ptr);
+                }
+            }
+        }
+
         public static string UnsafeRead_UTF8(Func<IntPtr, int, int> nativeFunc)
         {
             unsafe

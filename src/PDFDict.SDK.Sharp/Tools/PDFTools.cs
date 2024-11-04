@@ -127,6 +127,8 @@ namespace PDFDict.SDK.Sharp.Tools
                     var pdfPage = pdfDoc.LoadPage(i);
                     pageTexts[i] = pdfPage.GetText();
                 }
+
+                pdfDoc.Save("C:/temp/xxx.pdf", true);
             }
 
             return pageTexts;

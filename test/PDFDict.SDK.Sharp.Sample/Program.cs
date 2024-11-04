@@ -13,10 +13,12 @@ namespace PDFDict.SDK.Sharp.Sample
 
             PDFSharpLib.Initialize();
 
-            // ExtractText();
-            ExtractImages();
+            // ExtractImages();
+            ExtractText();
+            // OCRImages();
+            // OCRPages();
             // ReadTags();
-            // InsertPageAsImage();
+            // AddPageAsXObject();
             // FillForm();
             // RenderPDF();
             // ReadAnnots();
@@ -30,9 +32,9 @@ namespace PDFDict.SDK.Sharp.Sample
             Console.WriteLine("Sample case completed");
         }
 
-        private static void ExtractImages()
+        private static void OCRImages()
         {
-            string input = Path.Combine(Environment.CurrentDirectory, @"files/pdf/ASCII-Table-wide.pdf");
+            string input = Path.Combine(Environment.CurrentDirectory, @"files/pdf/ocr/img.pdf");
             Console.WriteLine(Path.Combine(Environment.CurrentDirectory, @"files/img"));
             var res = PDFTools.OCRPageImages(input, Path.Combine(Environment.CurrentDirectory, @"files/img"));
             for (int i = 0; i < res.Count; i++)
@@ -45,6 +47,26 @@ namespace PDFDict.SDK.Sharp.Sample
                     Console.WriteLine($"--- Confidence: {res[i].ImageOCRResults[j].OCRConfidence}");
                 }
             }
+        }
+
+        private static void OCRPages()
+        {
+            string input = Path.Combine(Environment.CurrentDirectory, @"files/pdf/ocr/invoice.pdf");
+            Console.WriteLine(Path.Combine(Environment.CurrentDirectory, @"files/img"));
+            var res = PDFTools.OCRPages(input, Path.Combine(Environment.CurrentDirectory, @"files/img"));
+            for (int i = 0; i < res.Count; i++)
+            {
+                Console.WriteLine($"--- Page {i + 1}");
+                Console.WriteLine($"--- OCR result: {res[i].OCRText}");
+                Console.WriteLine($"--- Confidence: {res[i].OCRConfidence}");
+            }
+        }
+
+        private static void ExtractImages()
+        {
+            string input = Path.Combine(Environment.CurrentDirectory, @"files/pdf/pdfua/FlyerPDFUA-en2015.pdf");
+            Console.WriteLine(Path.Combine(Environment.CurrentDirectory, @"files/img"));
+            PDFTools.ExtractImages(input, "png", Path.Combine(Environment.CurrentDirectory, @"files/img"));
         }
 
         private static void ReadTags()
@@ -152,7 +174,7 @@ namespace PDFDict.SDK.Sharp.Sample
 
         private static void ExtractText()
         {
-            string pdf = Path.Combine(Environment.CurrentDirectory, @"files/pdf/ASCII-Table-wide.pdf");
+            string pdf = Path.Combine(Environment.CurrentDirectory, @"files/pdf/ocr/invoice.pdf");
             var pageTexts = PDFTools.ExtractText(pdf);
             foreach (var pageText in pageTexts)
             {
