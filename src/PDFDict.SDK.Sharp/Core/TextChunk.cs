@@ -17,5 +17,27 @@ namespace PDFDict.SDK.Sharp.Core
             BBox = bbox;
             Text = text;
         }
+
+        public override string ToString()
+        {
+            return $"Text: {Text}, BBox: {BBox}";
+        }
+    }
+
+    public class PageTextChunks
+    {
+        public int PageIndex { get; private set; }
+        public List<TextChunk> TextChunks { get; private set; }
+
+        public PageTextChunks(int pageIndex)
+        {
+            PageIndex = pageIndex;
+            TextChunks = new List<TextChunk>();
+        }
+
+        public void AddTextChunk(RectangleF bbox, string text)
+        {
+            TextChunks.Add(new TextChunk(bbox, text));
+        }
     }
 }

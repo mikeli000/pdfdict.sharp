@@ -13,8 +13,9 @@ namespace PDFDict.SDK.Sharp.Sample
 
             PDFSharpLib.Initialize();
 
+            ExtractTable();
             // ExtractImages();
-            ExtractText();
+            // ExtractText();
             // OCRImages();
             // OCRPages();
             // ReadTags();
@@ -30,6 +31,12 @@ namespace PDFDict.SDK.Sharp.Sample
             //Sample.DrawText();
 
             Console.WriteLine("Sample case completed");
+        }
+
+        private static void ExtractTable()
+        {
+            string pdf = Path.Combine(Environment.CurrentDirectory, @"files/pdf/table.pdf");
+            PDFTools.ExtractTable(pdf);
         }
 
         private static void OCRImages()

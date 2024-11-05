@@ -68,31 +68,32 @@ namespace PDFDict.SDK.Sharp.Core
             for (int i = 0; i < charCount; i++)
             {
                 var c = fpdf_text.FPDFTextGetUnicode(pageTextPtr, i);
-
-                double left = 0, right = 0, bottom = 0, top = 0;
-                int ret = fpdf_text.FPDFTextGetCharBox(pageTextPtr, i, ref left, ref right, ref bottom, ref top);
-                if (ret > 0)
-                {
-                    Console.WriteLine($"Char {i}: {c} ({left}, {right}, {bottom}, {top})");
-
-                    //this.DrawRect(new Rectangle((int)left, (int)bottom, (int)(right - left), (int)(top - bottom)), new GraphicsState { Stroke = true, Fill = false, StrokeColor = Color.Red, StrokeWidth = 1 });
-                }
-
                 buf.Append((char)c);
             }
 
+            return buf.ToString();
+        }
+
+        public PageTextChunks GetTextChunks()
+        {
+            var pageTextPtr = fpdf_text.FPDFTextLoadPage(_pagePtr);
+            int charCount = fpdf_text.FPDFTextCountChars(pageTextPtr);
+
             int rectCount = fpdf_text.FPDFTextCountRects(pageTextPtr, 0, charCount);
+            if (rectCount == 0)
+            {
+                return null;
+            }
+
+            var pageTextChunks = new PageTextChunks(_pageIndex);
             for (int i = 0; i < rectCount; i++)
             {
                 double left = 0, right = 0, bottom = 0, top = 0;
                 int ret = fpdf_text.FPDFTextGetRect(pageTextPtr, i, ref left, ref top, ref right, ref bottom);
                 if (ret > 0)
                 {
-                    Console.WriteLine($"Rect {i}: ({left}, {right}, {bottom}, {top})");
-
                     var rect = new RectangleF((float)left, (float)top, (float)(right - left), (float)(bottom - top));
-                    this.DrawRect(rect, new GraphicsState { Stroke = true, Fill = false, StrokeColor = Color.Blue, StrokeWidth = 0.5f });
-
+                    string chars = string.Empty;
                     unsafe
                     {
                         Func<IntPtr, int, int> nativeFunc = (buf, maxByteCount) =>
@@ -100,13 +101,15 @@ namespace PDFDict.SDK.Sharp.Core
                             var len = fpdf_text.FPDFTextGetBoundedText(pageTextPtr, left, top, right, bottom, ref ((ushort*)buf)[0], maxByteCount);
                             return (int)len;
                         };
-                        string chars = NativeStringReader.UnsafeRead_UTF16_LE_2(nativeFunc);
-                        Console.WriteLine($"Text in rect {i}: {chars}");
+                        chars = NativeStringReader.UnsafeRead_UTF16_LE_2(nativeFunc);
+                        //Console.WriteLine($"Text in rect {i}: {chars}");
                     }
+
+                    pageTextChunks.AddTextChunk(rect, chars);
                 }
             }
 
-            return buf.ToString();
+            return pageTextChunks;
         }
 
         public PDFImage[] GetImages()
