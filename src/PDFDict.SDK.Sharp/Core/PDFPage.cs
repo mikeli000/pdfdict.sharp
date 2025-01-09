@@ -1,6 +1,9 @@
-﻿using PDFiumCore;
+﻿using PDFDict.SDK.Sharp.Core.Contents;
+using PDFDict.SDK.Sharp.Core.Tabula;
+using PDFiumCore;
 using System.Drawing;
 using System.Text;
+using Tesseract;
 
 namespace PDFDict.SDK.Sharp.Core
 {
@@ -10,7 +13,7 @@ namespace PDFDict.SDK.Sharp.Core
         private PDFDocument _pdfDoc;
         private int _pageIndex;
         private Stack<FpdfPageobjectT> _graphicsPathStack = new Stack<FpdfPageobjectT>();
-        private GraphicsState _graphicsState;
+        private DrawingParams _graphicsState;
 
         private PDFPage(PDFDocument pdfDoc, FpdfPageT pagePtr, int pageIndex)
         {
@@ -74,7 +77,7 @@ namespace PDFDict.SDK.Sharp.Core
             return buf.ToString();
         }
 
-        public PageTextChunks GetTextChunks()
+        public PagedTextThread GetTextRun()
         {
             var pageTextPtr = fpdf_text.FPDFTextLoadPage(_pagePtr);
             int charCount = fpdf_text.FPDFTextCountChars(pageTextPtr);
@@ -85,7 +88,7 @@ namespace PDFDict.SDK.Sharp.Core
                 return null;
             }
 
-            var pageTextChunks = new PageTextChunks(_pageIndex);
+            var pageTextChunks = new PagedTextThread(_pageIndex);
             for (int i = 0; i < rectCount; i++)
             {
                 double left = 0, right = 0, bottom = 0, top = 0;
@@ -96,20 +99,279 @@ namespace PDFDict.SDK.Sharp.Core
                     string chars = string.Empty;
                     unsafe
                     {
-                        Func<IntPtr, int, int> nativeFunc = (buf, maxByteCount) =>
+                        Func<IntPtr, int, int> nativeFunc = (buf, count) =>
                         {
-                            var len = fpdf_text.FPDFTextGetBoundedText(pageTextPtr, left, top, right, bottom, ref ((ushort*)buf)[0], maxByteCount);
-                            return (int)len;
+                            var len = fpdf_text.FPDFTextGetBoundedText(pageTextPtr, left, top, right, bottom, ref ((ushort*)buf)[0], count);
+                            return len;
                         };
-                        chars = NativeStringReader.UnsafeRead_UTF16_LE_2(nativeFunc);
+                        chars = NativeStringReader.UnsafeRead_UTF16_LE_2(nativeFunc, charCount);
                         //Console.WriteLine($"Text in rect {i}: {chars}");
                     }
 
-                    pageTextChunks.AddTextChunk(rect, chars);
+                    pageTextChunks.AddTextRun(rect, chars);
                 }
             }
 
             return pageTextChunks;
+        }
+
+        public PageThread BuildPageThread()
+        {
+            var pageThread = new PageThread();
+            BuildTextThread(pageThread);
+
+            int objCount = fpdf_edit.FPDFPageCountObjects(_pagePtr);
+            for (int i = 0; i < objCount; i++)
+            {
+                var obj = fpdf_edit.FPDFPageGetObject(_pagePtr, i);
+                var type = fpdf_edit.FPDFPageObjGetType(obj);
+                if (type == FPDF_PAGEOBJ_TYPE.FPDF_PAGEOBJ_TEXT)
+                {
+                }
+                else if (type == FPDF_PAGEOBJ_TYPE.FPDF_PAGEOBJ_IMAGE)
+                {
+                }
+                else if (type == FPDF_PAGEOBJ_TYPE.FPDF_PAGEOBJ_PATH)
+                {
+                }
+                else if (type == FPDF_PAGEOBJ_TYPE.FPDF_PAGEOBJ_FORM)
+                {
+                }
+            }
+
+            return pageThread;
+        }
+
+        private void BuildTextThread(PageThread pageThread)
+        {
+            var pageTextPtr = fpdf_text.FPDFTextLoadPage(_pagePtr);
+            int charCount = fpdf_text.FPDFTextCountChars(pageTextPtr);
+
+            string chars = string.Empty;
+            unsafe
+            {
+                Func<IntPtr, int, int> nativeFunc = (buf, count) =>
+                {
+                    var len = fpdf_text.FPDFTextGetText(pageTextPtr, 0, count, ref ((ushort*)buf)[0]);
+                    return len;
+                };
+                chars = NativeStringReader.UnsafeRead_UTF16_LE_2(nativeFunc, charCount + 1); // /0 terminated
+            }
+
+            int cc = 0;
+            var textElement = new TextElement();
+            pageThread.AddPageElement(textElement);
+            for (int i = 0; i < charCount;)
+            {
+                char c = chars[i];
+                if (c == '\0' || c == '\r' || c == '\n')
+                {
+                    i++;
+                    continue;
+                }
+
+                string textRun;
+                var textObj = fpdf_text.FPDFTextGetTextObject(pageTextPtr, i);
+                unsafe
+                {
+                    Func<IntPtr, int, int> nativeFunc = (buf, maxByteCount) =>
+                    {
+                        var len = fpdf_edit.FPDFTextObjGetText(textObj, pageTextPtr, ref ((ushort*)buf)[0], (uint)maxByteCount);
+                        return (int)len;
+                    };
+                    textRun = NativeStringReader.UnsafeRead_UTF16_LE(nativeFunc);
+                }
+                if (string.IsNullOrEmpty(textRun))
+                {
+                    i++;
+                    continue;
+                }
+
+                GraphicsState gState = new GraphicsState();
+                TextState textState = new TextState();
+                gState.TextState = textState;
+                
+                System.Drawing.Drawing2D.Matrix matrix = new System.Drawing.Drawing2D.Matrix(1, 0, 0, 1, 0, 0);
+                unsafe
+                {
+                    using FS_MATRIX_ fm = new FS_MATRIX_();
+                    if (fpdf_edit.FPDFPageObjGetMatrix(textObj, fm) > 0)
+                    {
+                        matrix = new System.Drawing.Drawing2D.Matrix(fm.A, fm.B, fm.C, fm.D, fm.E, fm.F);
+                    }
+                }
+
+                float left = 0, right = 0, bottom = 0, top = 0;
+                fpdf_edit.FPDFPageObjGetBounds(textObj, ref left, ref bottom, ref right, ref top);
+                var bbox = new RectangleF(left, bottom, right - left, top - bottom);
+
+                float fontSize = 0;
+                if (fpdf_edit.FPDFTextObjGetFontSize(textObj, ref fontSize) > 0)
+                {
+                    textState.FontSize = fontSize;
+                }
+
+                var fontObj = fpdf_edit.FPDFTextObjGetFont(textObj);
+                if (fontObj != null)
+                {
+                    textState.FontWeight = fpdf_edit.FPDFFontGetWeight(fontObj);
+                    int angle = 0;
+                    fpdf_edit.FPDFFontGetItalicAngle(fontObj, ref angle);
+                    textState.FontItalicAngle = angle;
+
+                    float spaceWidth = 0;
+                    if (fpdf_edit.FPDFFontGetGlyphWidth(fontObj, 0x6f, textState.FontSize, ref spaceWidth) > 0)
+                    {
+                        textState.SpaceWidth = spaceWidth;
+                    }
+                    else if (fpdf_edit.FPDFFontGetGlyphWidth(fontObj, 0x6e, textState.FontSize, ref spaceWidth) > 0)
+                    {
+                        textState.SpaceWidth = spaceWidth;
+                    }
+                    else if (fpdf_edit.FPDFFontGetGlyphWidth(fontObj, 0x20, textState.FontSize, ref spaceWidth) > 0)
+                    {
+                        textState.SpaceWidth = spaceWidth;
+                    }
+
+                    unsafe
+                    {
+                        Func<IntPtr, int, int> nativeFunc = (buf, maxByteCount) =>
+                        {
+                            var len = fpdf_edit.FPDFFontGetFamilyName(fontObj, (sbyte*)buf, (ulong)maxByteCount);
+                            return (int)len;
+                        };
+                        textState.FontFamilyName = NativeStringReader.UnsafeRead_UTF8(nativeFunc);
+                    }
+                }
+
+                uint r = 0, g = 0, b = 0, a = 0;
+                int ret = fpdf_edit.FPDFPageObjGetFillColor(textObj, ref r, ref g, ref b, ref a);
+                if (ret > 0)
+                {
+                    gState.NonStrokingColor = ColorState.From(r, g, b, a);
+                }
+                fpdf_edit.FPDFPageObjGetStrokeColor(textObj, ref r, ref g, ref b, ref a);
+                if (ret > 0)
+                {
+                    gState.StrokingColor = ColorState.From(r, g, b, a);
+                }
+
+                var renderMode = fpdf_edit.FPDFTextObjGetTextRenderMode(textObj);
+                textState.RenderingMode = (int)renderMode;
+
+                double x = 0, y = 0;
+                fpdf_text.FPDFTextGetCharOrigin(pageTextPtr, i, ref x, ref y);
+                RectangleF bbox1 = RectangleF.Empty;
+                for (int j = 0; j < textRun.Length; j++)
+                {
+                    //double left = 0, right = 0, bottom = 0, top = 0;
+                    //ret = fpdf_text.FPDFTextGetCharBox(pageTextPtr, i + j, ref left, ref right, ref bottom, ref top);
+                    if (ret > 0)
+                    {
+                        var charBox = new RectangleF((float)left, (float)bottom, (float)(right - left), (float)(top - bottom));
+                        if (bbox1.IsEmpty)
+                        {
+                            bbox1 = charBox;
+                        }
+                        else
+                        {
+                            bbox1 = RectangleF.Union(bbox1, charBox);
+                        }
+                    }
+                }
+
+                bool appended = textElement.TryAppendText(textRun, x, y, bbox, gState);
+                if (!appended)
+                {
+                    textElement = new TextElement();
+                    textElement.TryAppendText(textRun, x, y, bbox, gState);
+                    pageThread.AddPageElement(textElement);
+                }
+
+                i += textRun.Length;
+            }
+
+            Console.WriteLine($"Char count: {cc}, {charCount}");
+        }
+
+        public bool Flatten()
+        {
+            int res = fpdf_flatten.FPDFPageFlatten(_pagePtr, 1);
+            if (res == 1)
+            {
+                Save();
+            }
+            return res == 1;
+        }
+
+        public void RemoveLinessObjects()
+        {
+            int objCount = fpdf_edit.FPDFPageCountObjects(_pagePtr);
+            for (int i = objCount - 1; i >= 0; i--)
+            {
+                var obj = fpdf_edit.FPDFPageGetObject(_pagePtr, i);
+                var type = fpdf_edit.FPDFPageObjGetType(obj);
+                if (type == FPDF_PAGEOBJ_TYPE.FPDF_PAGEOBJ_PATH)
+                {
+                    RedrawPath(obj);
+                }
+                else if (type == FPDF_PAGEOBJ_TYPE.FPDF_PAGEOBJ_FORM)
+                {
+                    int count = fpdf_edit.FPDFFormObjCountObjects(obj);
+                    for (int m = count - 1; m >= 0; m--)
+                    {
+                        var xobj = fpdf_edit.FPDFFormObjGetObject(obj, (uint)m);
+                        var xobjType = fpdf_edit.FPDFPageObjGetType(xobj);
+
+                        if (xobjType == FPDF_PAGEOBJ_TYPE.FPDF_PAGEOBJ_PATH)
+                        {
+                            RedrawPath(xobj);
+                        }
+                        else
+                        {
+                            fpdf_edit.FPDFPageRemoveObject(_pagePtr, xobj);
+                        }
+                    }
+                }
+                else
+                {
+                    fpdf_edit.FPDFPageRemoveObject(_pagePtr, obj);
+                }
+
+                fpdf_edit.FPDFPageGenerateContent(_pagePtr);
+            }
+        }
+
+        private void RedrawPath(FpdfPageobjectT pathObj)
+        {
+            int commandCount = fpdf_edit.FPDFPathCountSegments(pathObj);
+            if (commandCount == 0)
+            {
+                return;
+            }
+            bool isLine = true;
+            for (int j = commandCount - 1; j >= 0; j--)
+            {
+                var segment = fpdf_edit.FPDFPathGetPathSegment(pathObj, j);
+                int segmentType = fpdf_edit.FPDFPathSegmentGetType(segment);
+                if (segmentType == FPDF_SEGMENT_COMMAND.FPDF_SEGMENT_BEZIERTO)
+                {
+                    isLine = false;
+                    break;
+                }
+            }
+
+            if (isLine)
+            {
+                int ret = fpdf_edit.FPDFPageObjSetStrokeColor(pathObj, 255, 0, 0, 255);
+                ret &= fpdf_edit.FPDFPageObjSetFillColor(pathObj, 0, 0, 255, 255);
+                ret &= fpdf_edit.FPDFPageObjSetStrokeWidth(pathObj, 1f);
+                ret &= fpdf_edit.FPDFPathSetDrawMode(pathObj, 1, 1);
+            }
+            else
+            {
+                fpdf_edit.FPDFPageRemoveObject(_pagePtr, pathObj);
+            }
         }
 
         public PDFImage[] GetImages()
@@ -120,7 +382,7 @@ namespace PDFDict.SDK.Sharp.Core
             {
                 var obj = fpdf_edit.FPDFPageGetObject(_pagePtr, i);
                 var type = fpdf_edit.FPDFPageObjGetType(obj);
-                if (type == PageObject.FPDF_PAGEOBJ_IMAGE)
+                if (type == FPDF_PAGEOBJ_TYPE.FPDF_PAGEOBJ_IMAGE)
                 {
                     //var bitmap = fpdf_edit.FPDFImageObjGetBitmap(obj);
 
@@ -156,7 +418,7 @@ namespace PDFDict.SDK.Sharp.Core
             return pdfAnnots;
         }
 
-        public void DrawRect(Rectangle rect, GraphicsState gState)
+        public void DrawRect(Rectangle rect, DrawingParams gState)
         {
             float x = rect.X;
             float y = rect.Y;
@@ -172,7 +434,7 @@ namespace PDFDict.SDK.Sharp.Core
             EndGraphics();
         }
 
-        public void DrawRect(RectangleF rect, GraphicsState gState)
+        public void DrawRect(RectangleF rect, DrawingParams gState)
         {
             float x = rect.X;
             float y = rect.Y;
@@ -188,7 +450,7 @@ namespace PDFDict.SDK.Sharp.Core
             EndGraphics();
         }
 
-        public void BeginGraphics(GraphicsState gState)
+        public void BeginGraphics(DrawingParams gState)
         {
             if (_graphicsPathStack.Count > 0)
             {
@@ -397,7 +659,21 @@ namespace PDFDict.SDK.Sharp.Core
         }
     }
 
-    public sealed class PageObject
+    public sealed class FPDF_TEXT_RENDERMODE
+    {
+        public static readonly int UNKNOWN = -1;
+        public static readonly int FILL = 0;
+        public static readonly int STROKE = 1;
+        public static readonly int FILL_STROKE = 2;
+        public static readonly int INVISIBLE = 3;
+        public static readonly int FILL_CLIP = 4;
+        public static readonly int STROKE_CLIP = 5;
+        public static readonly int FILL_STROKE_CLIP = 6;
+        public static readonly int CLIP = 7;
+        public static readonly int LAST = 7;
+    }
+
+    public sealed class FPDF_PAGEOBJ_TYPE
     {
         public static readonly int FPDF_PAGEOBJ_UNKNOWN = 0;
         public static readonly int FPDF_PAGEOBJ_TEXT = 1;
@@ -407,7 +683,16 @@ namespace PDFDict.SDK.Sharp.Core
         public static readonly int FPDF_PAGEOBJ_FORM = 5;
     }
 
-    public sealed class GraphicsState
+    public sealed class FPDF_SEGMENT_COMMAND
+    {
+        // The path segment constants.
+        public static readonly int FPDF_SEGMENT_UNKNOWN = -1;
+        public static readonly int FPDF_SEGMENT_LINETO = 0;
+        public static readonly int FPDF_SEGMENT_BEZIERTO = 1;
+        public static readonly int FPDF_SEGMENT_MOVETO = 2;
+    }
+
+    public sealed class DrawingParams
     {
         public bool Stroke { get; set; } = true;
         public bool Fill { get; set; } = false;

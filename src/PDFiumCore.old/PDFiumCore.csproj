@@ -11,7 +11,7 @@
     <Authors>DJGosnell</Authors>
 	<PackageIcon>icon.png</PackageIcon>
     <DocumentationFile>PDFiumCore.xml</DocumentationFile>
-    <OutputPath>$(SolutionDir)../artifacts/</OutputPath>
+    <OutputPath>$(SolutionDir)/artifacts/</OutputPath>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
@@ -20,9 +20,9 @@
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="bblanchon.PDFium.Linux" Version="133.0.6844" PrivateAssets="analyzers" />
-    <PackageReference Include="bblanchon.PDFium.macOS" Version="133.0.6844" PrivateAssets="analyzers" />
-    <PackageReference Include="bblanchon.PDFium.Win32" Version="133.0.6844" PrivateAssets="analyzers" />
+    <PackageReference Include="bblanchon.PDFium.Linux" Version="124.0.6337" />
+    <PackageReference Include="bblanchon.PDFium.macOS" Version="124.0.6337" />
+    <PackageReference Include="bblanchon.PDFium.Win32" Version="124.0.6337" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" Condition="'$(TargetFramework)' == 'netstandard2.1'" />
   </ItemGroup>

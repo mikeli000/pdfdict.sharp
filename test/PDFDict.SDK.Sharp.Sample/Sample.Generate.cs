@@ -23,7 +23,7 @@ namespace PDFDict.SDK.Sharp.Sample
                 doc.AddFont(fontPath, PDFFont.FPDF_FONT_TRUETYPE);
                 page.AddText("Hello 汉字\0 world", 100, 500, "KaiTi", 18, Color.DarkCyan);
 
-                GraphicsState gState = new GraphicsState
+                DrawingParams gState = new DrawingParams
                 {
                     StrokeWidth = 2,
                     StrokeColor = Color.DodgerBlue,
@@ -53,7 +53,7 @@ namespace PDFDict.SDK.Sharp.Sample
                 doc.AddFont(fontPath, PDFFont.FPDF_FONT_TRUETYPE);
                 page.AddText("Hello 汉字\0 world", 100, 500, "KaiTi", 18, Color.DarkCyan);
 
-                GraphicsState gState = new GraphicsState 
+                DrawingParams gState = new DrawingParams 
                 {
                     StrokeWidth = 2,
                     StrokeColor = Color.DodgerBlue,

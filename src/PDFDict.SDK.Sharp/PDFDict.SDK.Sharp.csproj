@@ -27,9 +27,9 @@
 	      <PrivateAssets>all</PrivateAssets>
 	    </PackageReference>
 
-		<PackageReference Include="bblanchon.PDFium.Linux" Version="124.0.6337" />
-		<PackageReference Include="bblanchon.PDFium.macOS" Version="124.0.6337" />
-		<PackageReference Include="bblanchon.PDFium.Win32" Version="124.0.6337" />
+		<PackageReference Include="bblanchon.PDFium.Linux" Version="133.0.6844" />
+		<PackageReference Include="bblanchon.PDFium.macOS" Version="133.0.6844" />
+		<PackageReference Include="bblanchon.PDFium.Win32" Version="133.0.6844" />
 		<PackageReference Include="Tesseract" Version="5.2.0" />
 		<PackageReference Include="Tesseract.Drawing" Version="5.2.0" />
     </ItemGroup>
@@ -47,5 +47,9 @@
 	  <None Update="x64\libtesseract50.so">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Core\Tabula\" />
 	</ItemGroup>
 </Project>

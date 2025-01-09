@@ -35,7 +35,7 @@ namespace PDFDict.SDK.Sharp.Core
                     sbyte* buf = (sbyte*)Marshal.AllocHGlobal(128);
                     try
                     {
-                        var len = fpdf_edit.FPDFFontGetFontName(_fontPtr, buf, 128);
+                        var len = fpdf_edit.FPDFFontGetFamilyName(_fontPtr, buf, 128);
                         _fontName = Marshal.PtrToStringUTF8((IntPtr)buf, (int)len);
                     }
                     finally

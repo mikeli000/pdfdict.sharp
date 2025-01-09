@@ -1,11 +1,5 @@
 ﻿using PDFDict.SDK.Sharp.Core;
-using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Tesseract;
 
 namespace PDFDict.SDK.Sharp.Tools
 {
@@ -26,17 +20,47 @@ namespace PDFDict.SDK.Sharp.Tools
                 {
                     var page = pdfDoc.LoadPage(i);
 
-                    var pageTextChunks = page.GetTextChunks();
-                    Console.WriteLine($"Page {i + 1} text chunks:");
-                    foreach (var textChunk in pageTextChunks.TextChunks)
+                    var pageThread = page.BuildPageThread();
+                    foreach (var textEle in pageThread.GetContentList())
                     {
-                        Console.WriteLine(textChunk);
-                        page.DrawRect(textChunk.BBox, new GraphicsState { Stroke = true, Fill = false, StrokeColor = Color.Blue, StrokeWidth = 0.5f });
+                        Console.WriteLine(textEle);
+                        page.DrawRect(textEle.BBox, new DrawingParams { Stroke = true, Fill = false, StrokeColor = Color.Blue, StrokeWidth = 0.5f });
+
+                        var gs = new DrawingParams { Stroke = true, Fill = false, StrokeColor = Color.Red, StrokeWidth = 0.5f };
+                        //page.BeginGraphics(gs);
+                        //page.BeginPath(0, 0);
+                        //page.MoveTo((float)((TextElement)textEle).GetBaselineX(), (float)((TextElement)textEle).GetBaselineY());
+                        //page.LineTo((float)((TextElement)textEle).GetBaselineX() + textEle.BBox.Width, (float)((TextElement)textEle).GetBaselineY());
+                        //page.LineTo((float)((TextElement)textEle).GetBaselineX(), (float)((TextElement)textEle).GetBaselineY() + 25);
+                        //page.ClosePath();
+                        //page.EndGraphics();
                     }
+
+                    // page.RemoveLinessObjects();
                 }
 
-                pdfDoc.Save("c:/temp/xxx.pdf", true);
+                pdfDoc.Save("c:/temp/zzz.pdf", true);
             }
         }
+
+        public static void TestLine(string pdfFile)
+        {
+            if (!File.Exists(pdfFile))
+            {
+                throw new FileNotFoundException("PDF file not found", pdfFile);
+            }
+
+            using (PDFDocument pdfDoc = PDFDocument.Load(pdfFile))
+            {
+                int pageCount = pdfDoc.GetPageCount();
+                var page = pdfDoc.LoadPage(0);
+                //page.RemoveLinessObjects();
+                page.Flatten();
+
+                pdfDoc.Save("c:/temp/zzz.pdf", true);
+            }
+        }
+
+        
     }
 }

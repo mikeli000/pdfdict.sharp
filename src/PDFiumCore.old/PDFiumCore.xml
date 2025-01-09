@@ -489,7 +489,7 @@
             <para>height      -   Height in pixels to be filled.</para>
             <para>color       -   A 32-bit value specifing the color, in 8888 ARGB format.</para>
             <para>Return value:</para>
-            <para>Returns whether the operation succeeded or not.</para>
+            <para>None.</para>
             <para>Comments: This function sets the color and (optionally) alpha value in the specified region of the bitmap.</para>
             <para>NOTE: If the alpha channel is used, this function does NOT composite the background with the source color, instead the background will be replaced by the source color and the alpha.</para>
             <para>If the alpha channel is not used, the alpha parameter is ignored.</para>
@@ -621,13 +621,14 @@
             <para>Parameters:</para>
             <para>document    -   Handle to the loaded document.</para>
             <para>key         -   Name of the key in the viewer pref dictionary, encoded in UTF-8.</para>
-            <para>buffer      -   Caller-allocate buffer to receive the key, or NULL -   to query the required length.</para>
+            <para>buffer      -   A string to write the contents of the key to.</para>
             <para>length      -   Length of the buffer.</para>
             <para>Return value:</para>
             <para>The number of bytes in the contents, including the NULL terminator.</para>
             <para>Thus if the return value is 0, then that indicates an error, such</para>
-            <para>as when |document| is invalid. If |length| is less than the required</para>
-            <para>length, or |buffer| is NULL, |buffer| will not be modified.</para>
+            <para>as when |document| is invalid or |buffer| is NULL. If |length| is</para>
+            <para>less than the returned length, or |buffer| is NULL, |buffer| will</para>
+            <para>not be modified.</para>
             </summary>
         </member>
         <member name="M:PDFiumCore.fpdfview.FPDF_CountNamedDests(PDFiumCore.FpdfDocumentT)">
@@ -1354,18 +1355,6 @@
             <para>|value| not provided.</para>
             </summary>
         </member>
-        <member name="M:PDFiumCore.fpdf_annot.FPDFAnnotGetFontColor(PDFiumCore.FpdfFormHandleT,PDFiumCore.FpdfAnnotationT,System.UInt32@,System.UInt32@,System.UInt32@)">
-            <summary>
-            <para>Experimental API.</para>
-            <para>Get the RGB value of the font color for an |annot| with variable text.</para>
-            <para>hHandle  - handle to the form fill module, returned by</para>
-            <para>FPDFDOC_InitFormFillEnvironment.</para>
-            <para>annot    - handle to an annotation.</para>
-            <para>R, G, B  - buffer to hold the RGB value of the color. Ranges from 0 to 255.</para>
-            <para>Returns true if the font color was set, false on error or if the font</para>
-            <para>color was not provided.</para>
-            </summary>
-        </member>
         <member name="M:PDFiumCore.fpdf_annot.FPDFAnnotIsChecked(PDFiumCore.FpdfFormHandleT,PDFiumCore.FpdfAnnotationT)">
             <summary>
             <para>Experimental API.</para>
@@ -1495,6 +1484,30 @@
             <para>Returns a handle to the new attachment object, or NULL on failure.</para>
             </summary>
         </member>
+        <member name="P:PDFiumCore.FPDF_FORMFILLINFO.FFI_DoURIActionWithKeyboardModifier">
+            <summary>
+            <para>Method: FFI_DoURIActionWithKeyboardModifier</para>
+            <para>Ask the implementation to navigate to a uniform resource identifier</para>
+            <para>with the specified modifiers.</para>
+            <para>Interface Version:</para>
+            <para>Ignored if |version|&lt;2.</para>
+            <para>Implementation Required:</para>
+            <para>No</para>
+            <para>Parameters:</para>
+            <para>param           -   Pointer to the interface structure itself.</para>
+            <para>uri             -   A byte string which indicates the uniform</para>
+            <para>resource identifier, terminated by 0.</para>
+            <para>modifiers       -   Keyboard modifier that indicates which of</para>
+            <para>the virtual keys are down, if any.</para>
+            <para>Return value:</para>
+            <para>None.</para>
+            <para>Comments:</para>
+            <para>If the embedder who is version 2 and does not implement this API,</para>
+            <para>then a call will be redirected to FFI_DoURIAction.</para>
+            <para>See the URI actions description of&lt;Reference, version 1.7&gt;&gt;</para>
+            <para>for more details.</para>
+            </summary>
+        </member>
         <member name="M:PDFiumCore.fpdf_formfill.FPDFDOC_InitFormFillEnvironment(PDFiumCore.FpdfDocumentT,PDFiumCore.FPDF_FORMFILLINFO)">
             <summary>
             <para>Function: FPDFDOC_InitFormFillEnvironment</para>
@@ -1609,6 +1622,7 @@
         </member>
         <member name="M:PDFiumCore.fpdf_formfill.FORM_OnMouseWheel(PDFiumCore.FpdfFormHandleT,PDFiumCore.FpdfPageT,System.Int32,PDFiumCore.FS_POINTF_,System.Int32,System.Int32)">
             <summary>
+            <para>Experimental API</para>
             <para>Function: FORM_OnMouseWheel</para>
             <para>Call this member function when the user scrolls the mouse wheel.</para>
             <para>Parameters:</para>
@@ -1663,9 +1677,13 @@
         </member>
         <member name="M:PDFiumCore.fpdf_formfill.FORM_OnLButtonUp(PDFiumCore.FpdfFormHandleT,PDFiumCore.FpdfPageT,System.Int32,System.Double,System.Double)">
             <summary>
-            <para>Function: FORM_OnLButtonUp</para>
-            <para>Call this member function when the user releases the left</para>
-            <para>mouse button.</para>
+            <para>Function: FORM_OnRButtonDown</para>
+            <para>Same as above, execpt for the right mouse button.</para>
+            <para>Comments: At the present time, has no effect except in XFA builds, but is included for the sake of symmetry.</para>
+            <para></para>
+            <para>FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV FORM_OnRButtonDown(FPDF_FORMHANDLE hHandle, FPDF_PAGE page, int modifier, double page_x, double page_y);</para>
+            <para></para>
+            <para>Function: FORM_OnLButtonUp Call this member function when the user releases the left mouse button.</para>
             <para>Parameters:</para>
             <para>hHandle     -   Handle to the form fill module, as returned by FPDFDOC_InitFormFillEnvironment().</para>
             <para>page        -   Handle to the page, as returned by FPDF_LoadPage().</para>
@@ -1741,6 +1759,7 @@
         </member>
         <member name="M:PDFiumCore.fpdf_formfill.FORM_GetFocusedText(PDFiumCore.FpdfFormHandleT,PDFiumCore.FpdfPageT,System.IntPtr,System.UInt32)">
             <summary>
+            <para>Experimental API</para>
             <para>Function: FORM_GetFocusedText</para>
             <para>Call this function to obtain the text within the current focused</para>
             <para>field, if any.</para>
@@ -1770,6 +1789,7 @@
         </member>
         <member name="M:PDFiumCore.fpdf_formfill.FORM_ReplaceAndKeepSelection(PDFiumCore.FpdfFormHandleT,PDFiumCore.FpdfPageT,System.UInt16@)">
             <summary>
+            <para>Experimental API</para>
             <para>Function: FORM_ReplaceAndKeepSelection</para>
             <para>Call this function to replace the selected text in a form</para>
             <para>text field or user-editable form combobox text field with another</para>
@@ -1804,6 +1824,7 @@
         </member>
         <member name="M:PDFiumCore.fpdf_formfill.FORM_SelectAllText(PDFiumCore.FpdfFormHandleT,PDFiumCore.FpdfPageT)">
             <summary>
+            <para>Experimental API</para>
             <para>Function: FORM_SelectAllText</para>
             <para>Call this function to select all the text within the currently focused</para>
             <para>form text field or form combobox text field.</para>
@@ -1841,7 +1862,7 @@
         <member name="M:PDFiumCore.fpdf_formfill.FORM_Undo(PDFiumCore.FpdfFormHandleT,PDFiumCore.FpdfPageT)">
             <summary>
             <para>Function: FORM_Undo</para>
-            <para>Make the current focused widget perform an undo operation.</para>
+            <para>Make the current focussed widget perform an undo operation.</para>
             <para>Parameters:</para>
             <para>hHandle     -   Handle to the form fill module, as returned by FPDFDOC_InitFormFillEnvironment().</para>
             <para>page        -   Handle to the page, as returned by FPDF_LoadPage().</para>
@@ -1852,7 +1873,7 @@
         <member name="M:PDFiumCore.fpdf_formfill.FORM_Redo(PDFiumCore.FpdfFormHandleT,PDFiumCore.FpdfPageT)">
             <summary>
             <para>Function: FORM_Redo</para>
-            <para>Make the current focused widget perform a redo operation.</para>
+            <para>Make the current focussed widget perform a redo operation.</para>
             <para>Parameters:</para>
             <para>hHandle     -   Handle to the form fill module, as returned by FPDFDOC_InitFormFillEnvironment().</para>
             <para>page        -   Handle to the page, as returned by FPDF_LoadPage().</para>
@@ -1874,6 +1895,7 @@
         </member>
         <member name="M:PDFiumCore.fpdf_formfill.FORM_GetFocusedAnnot(PDFiumCore.FpdfFormHandleT,System.Int32@,PDFiumCore.FpdfAnnotationT)">
             <summary>
+            <para>Experimental API.</para>
             <para>Function: FORM_GetFocusedAnnot.</para>
             <para>Call this member function to get the currently focused annotation.</para>
             <para>Parameters:</para>
@@ -1881,13 +1903,14 @@
             <para>page_index  -   Buffer to hold the index number of the page which contains the focused annotation. 0 for the first page. Can't be NULL.</para>
             <para>annot       -   Buffer to hold the focused annotation. Can't be NULL.</para>
             <para>Return Value:</para>
-            <para>On success, return true and write to the out parameters. Otherwise</para>
-            <para>return false and leave the out parameters unmodified.</para>
+            <para>On success, return true and write to the out parameters. Otherwise return</para>
+            <para>false and leave the out parameters unmodified.</para>
             <para>Comments: Not currently supported for XFA forms - will report no focused annotation. Must call FPDFPage_CloseAnnot() when the annotation returned in |annot| by this function is no longer needed. This will return true and set |page_index| to -1 and |annot| to NULL, if there is no focused annotation.</para>
             </summary>
         </member>
         <member name="M:PDFiumCore.fpdf_formfill.FORM_SetFocusedAnnot(PDFiumCore.FpdfFormHandleT,PDFiumCore.FpdfAnnotationT)">
             <summary>
+            <para>Experimental API.</para>
             <para>Function: FORM_SetFocusedAnnot.</para>
             <para>Call this member function to set the currently focused annotation.</para>
             <para>Parameters:</para>
@@ -1987,6 +2010,7 @@
         </member>
         <member name="M:PDFiumCore.fpdf_formfill.FPDF_GetFormType(PDFiumCore.FpdfDocumentT)">
             <summary>
+            <para>Experimental API</para>
             <para>Function: FPDF_GetFormType</para>
             <para>Returns the type of form contained in the PDF document.</para>
             <para>Parameters:</para>
@@ -1998,6 +2022,7 @@
         </member>
         <member name="M:PDFiumCore.fpdf_formfill.FORM_SetIndexSelected(PDFiumCore.FpdfFormHandleT,PDFiumCore.FpdfPageT,System.Int32,System.Int32)">
             <summary>
+            <para>Experimental API</para>
             <para>Function: FORM_SetIndexSelected</para>
             <para>Selects/deselects the value at the given |index| of the focused</para>
             <para>annotation.</para>
@@ -2014,6 +2039,7 @@
         </member>
         <member name="M:PDFiumCore.fpdf_formfill.FORM_IsIndexSelected(PDFiumCore.FpdfFormHandleT,PDFiumCore.FpdfPageT,System.Int32)">
             <summary>
+            <para>Experimental API</para>
             <para>Function: FORM_IsIndexSelected</para>
             <para>Returns whether or not the value at |index| of the focused</para>
             <para>annotation is currently selected.</para>
@@ -2177,21 +2203,13 @@
         </member>
         <member name="M:PDFiumCore.fpdf_catalog.FPDFCatalogIsTagged(PDFiumCore.FpdfDocumentT)">
             <summary>
+            <para>*</para>
             <para>Experimental API.</para>
             <para>Determine if |document| represents a tagged PDF.</para>
             <para>For the definition of tagged PDF, See (see 10.7 &quot;Tagged PDF&quot; in PDF</para>
             <para>Reference 1.7).</para>
             <para>document - handle to a document.</para>
             <para>Returns |true| iff |document| is a tagged PDF.</para>
-            </summary>
-        </member>
-        <member name="M:PDFiumCore.fpdf_catalog.FPDFCatalogSetLanguage(PDFiumCore.FpdfDocumentT,System.String)">
-            <summary>
-            <para>Experimental API.</para>
-            <para>Sets the language of |document| to |language|.</para>
-            <para>document - handle to a document.</para>
-            <para>language - the language to set to.</para>
-            <para>Returns TRUE on success.</para>
             </summary>
         </member>
         <member name="M:PDFiumCore.fpdf_dataavail.FPDFAvailCreate(PDFiumCore.FX_FILEAVAIL,PDFiumCore.FPDF_FILEACCESS)">
@@ -2721,8 +2739,6 @@
             <para>Returns TRUE on success.</para>
             <para>Ownership is transferred to the caller. Call FPDFPageObj_Destroy() to free</para>
             <para>it.</para>
-            <para>Note that when removing a |page_object| of type FPDF_PAGEOBJ_TEXT, all</para>
-            <para>FPDF_TEXTPAGE handles for |page| are no longer valid.</para>
             </summary>
         </member>
         <member name="M:PDFiumCore.fpdf_edit.FPDFPageCountObjects(PDFiumCore.FpdfPageT)">
@@ -2781,19 +2797,6 @@
             <para>error.</para>
             </summary>
         </member>
-        <member name="M:PDFiumCore.fpdf_edit.FPDFPageObjSetIsActive(PDFiumCore.FpdfPageobjectT,System.Int32)">
-            <summary>
-            <para>Experimental API.</para>
-            <para>Sets if |page_object| is active within page.</para>
-            <para>page_object - handle to a page object.</para>
-            <para>active      - a boolean specifying if the object is active.</para>
-            <para>Returns TRUE on success.</para>
-            <para>Page objects all start in the active state by default, and remain in that</para>
-            <para>state unless this function is called.</para>
-            <para>When |active| is false, this makes the |page_object| be treated as if it</para>
-            <para>wasn't in the document even though it is still held internally.</para>
-            </summary>
-        </member>
         <member name="M:PDFiumCore.fpdf_edit.FPDFPageObjTransform(PDFiumCore.FpdfPageobjectT,System.Double,System.Double,System.Double,System.Double,System.Double,System.Double)">
             <summary>
             <para>Transform |page_object| by the given matrix.</para>
@@ -2808,19 +2811,6 @@
             <para>|a c e|</para>
             <para>|b d f|</para>
             <para>and can be used to scale, rotate, shear and translate the |page_object|.</para>
-            </summary>
-        </member>
-        <member name="M:PDFiumCore.fpdf_edit.FPDFPageObjTransformF(PDFiumCore.FpdfPageobjectT,PDFiumCore.FS_MATRIX_)">
-            <summary>
-            <para>Experimental API.</para>
-            <para>Transform |page_object| by the given matrix.</para>
-            <para>page_object - handle to a page object.</para>
-            <para>matrix      - the transform matrix.</para>
-            <para>Returns TRUE on success.</para>
-            <para>This can be used to scale, rotate, shear and translate the |page_object|.</para>
-            <para>It is an improved version of FPDFPageObj_Transform() that does not do</para>
-            <para>unnecessary double to float conversions, and only uses 1 parameter for the</para>
-            <para>matrix. It also returns whether the operation succeeded or not.</para>
             </summary>
         </member>
         <member name="M:PDFiumCore.fpdf_edit.FPDFPageObjGetMatrix(PDFiumCore.FpdfPageobjectT,PDFiumCore.FS_MATRIX_)">
@@ -2876,14 +2866,6 @@
             <para>Returns a handle to a new image object.</para>
             </summary>
         </member>
-        <member name="M:PDFiumCore.fpdf_edit.FPDFPageObjGetMarkedContentID(PDFiumCore.FpdfPageobjectT)">
-            <summary>
-            <para>Experimental API.</para>
-            <para>Get the marked content ID for the object.</para>
-            <para>page_object - handle to a page object.</para>
-            <para>Returns the page object's marked content ID, or -1 on error.</para>
-            </summary>
-        </member>
         <member name="M:PDFiumCore.fpdf_edit.FPDFPageObjCountMarks(PDFiumCore.FpdfPageobjectT)">
             <summary>
             <para>Experimental API.</para>
@@ -2927,19 +2909,18 @@
             <para>Returns TRUE if the operation succeeded, FALSE if it failed.</para>
             </summary>
         </member>
-        <member name="M:PDFiumCore.fpdf_edit.FPDFPageObjMarkGetName(PDFiumCore.FpdfPageobjectmarkT,System.UInt16@,System.UInt32,System.UInt32@)">
+        <member name="M:PDFiumCore.fpdf_edit.FPDFPageObjMarkGetName(PDFiumCore.FpdfPageobjectmarkT,System.IntPtr,System.UInt32,System.UInt32@)">
             <summary>
             <para>Experimental API.</para>
             <para>Get the name of a content mark.</para>
             <para>mark       - handle to a content mark.</para>
             <para>buffer     - buffer for holding the returned name in UTF-16LE. This is only</para>
-            <para>modified if |buflen| is large enough to store the name.</para>
+            <para>modified if |buflen| is longer than the length of the name.</para>
             <para>Optional, pass null to just retrieve the size of the buffer</para>
             <para>needed.</para>
-            <para>buflen     - length of the buffer in bytes.</para>
+            <para>buflen     - length of the buffer.</para>
             <para>out_buflen - pointer to variable that will receive the minimum buffer size</para>
-            <para>in bytes to contain the name. This is a required parameter.</para>
-            <para>Not filled if FALSE is returned.</para>
+            <para>to contain the name. Not filled if FALSE is returned.</para>
             <para>Returns TRUE if the operation succeeded, FALSE if it failed.</para>
             </summary>
         </member>
@@ -2952,20 +2933,19 @@
             <para>failure.</para>
             </summary>
         </member>
-        <member name="M:PDFiumCore.fpdf_edit.FPDFPageObjMarkGetParamKey(PDFiumCore.FpdfPageobjectmarkT,System.UInt32,System.UInt16@,System.UInt32,System.UInt32@)">
+        <member name="M:PDFiumCore.fpdf_edit.FPDFPageObjMarkGetParamKey(PDFiumCore.FpdfPageobjectmarkT,System.UInt32,System.IntPtr,System.UInt32,System.UInt32@)">
             <summary>
             <para>Experimental API.</para>
             <para>Get the key of a property in a content mark.</para>
             <para>mark       - handle to a content mark.</para>
             <para>index      - index of the property.</para>
             <para>buffer     - buffer for holding the returned key in UTF-16LE. This is only</para>
-            <para>modified if |buflen| is large enough to store the key.</para>
+            <para>modified if |buflen| is longer than the length of the key.</para>
             <para>Optional, pass null to just retrieve the size of the buffer</para>
             <para>needed.</para>
-            <para>buflen     - length of the buffer in bytes.</para>
+            <para>buflen     - length of the buffer.</para>
             <para>out_buflen - pointer to variable that will receive the minimum buffer size</para>
-            <para>in bytes to contain the name. This is a required parameter.</para>
-            <para>Not filled if FALSE is returned.</para>
+            <para>to contain the key. Not filled if FALSE is returned.</para>
             <para>Returns TRUE if the operation was successful, FALSE otherwise.</para>
             </summary>
         </member>
@@ -2991,37 +2971,36 @@
             <para>Returns TRUE if the key maps to a number value, FALSE otherwise.</para>
             </summary>
         </member>
-        <member name="M:PDFiumCore.fpdf_edit.FPDFPageObjMarkGetParamStringValue(PDFiumCore.FpdfPageobjectmarkT,System.String,System.UInt16@,System.UInt32,System.UInt32@)">
+        <member name="M:PDFiumCore.fpdf_edit.FPDFPageObjMarkGetParamStringValue(PDFiumCore.FpdfPageobjectmarkT,System.String,System.IntPtr,System.UInt32,System.UInt32@)">
             <summary>
             <para>Experimental API.</para>
             <para>Get the value of a string property in a content mark by key.</para>
             <para>mark       - handle to a content mark.</para>
             <para>key        - string key of the property.</para>
             <para>buffer     - buffer for holding the returned value in UTF-16LE. This is</para>
-            <para>only modified if |buflen| is large enough to store the value.</para>
+            <para>only modified if |buflen| is longer than the length of the</para>
+            <para>value.</para>
             <para>Optional, pass null to just retrieve the size of the buffer</para>
             <para>needed.</para>
-            <para>buflen     - length of the buffer in bytes.</para>
+            <para>buflen     - length of the buffer.</para>
             <para>out_buflen - pointer to variable that will receive the minimum buffer size</para>
-            <para>in bytes to contain the name. This is a required parameter.</para>
-            <para>Not filled if FALSE is returned.</para>
+            <para>to contain the value. Not filled if FALSE is returned.</para>
             <para>Returns TRUE if the key maps to a string/blob value, FALSE otherwise.</para>
             </summary>
         </member>
-        <member name="M:PDFiumCore.fpdf_edit.FPDFPageObjMarkGetParamBlobValue(PDFiumCore.FpdfPageobjectmarkT,System.String,System.Byte*,System.UInt32,System.UInt32@)">
+        <member name="M:PDFiumCore.fpdf_edit.FPDFPageObjMarkGetParamBlobValue(PDFiumCore.FpdfPageobjectmarkT,System.String,System.IntPtr,System.UInt32,System.UInt32@)">
             <summary>
             <para>Experimental API.</para>
             <para>Get the value of a blob property in a content mark by key.</para>
             <para>mark       - handle to a content mark.</para>
             <para>key        - string key of the property.</para>
             <para>buffer     - buffer for holding the returned value. This is only modified</para>
-            <para>if |buflen| is large enough to store the value.</para>
+            <para>if |buflen| is at least as long as the length of the value.</para>
             <para>Optional, pass null to just retrieve the size of the buffer</para>
             <para>needed.</para>
-            <para>buflen     - length of the buffer in bytes.</para>
+            <para>buflen     - length of the buffer.</para>
             <para>out_buflen - pointer to variable that will receive the minimum buffer size</para>
-            <para>in bytes to contain the name. This is a required parameter.</para>
-            <para>Not filled if FALSE is returned.</para>
+            <para>to contain the value. Not filled if FALSE is returned.</para>
             <para>Returns TRUE if the key maps to a string/blob value, FALSE otherwise.</para>
             </summary>
         </member>
@@ -3053,7 +3032,7 @@
             <para>Returns TRUE if the operation succeeded, FALSE otherwise.</para>
             </summary>
         </member>
-        <member name="M:PDFiumCore.fpdf_edit.FPDFPageObjMarkSetBlobParam(PDFiumCore.FpdfDocumentT,PDFiumCore.FpdfPageobjectT,PDFiumCore.FpdfPageobjectmarkT,System.String,System.Byte*,System.UInt32)">
+        <member name="M:PDFiumCore.fpdf_edit.FPDFPageObjMarkSetBlobParam(PDFiumCore.FpdfDocumentT,PDFiumCore.FpdfPageobjectT,PDFiumCore.FpdfPageobjectmarkT,System.String,System.IntPtr,System.UInt32)">
             <summary>
             <para>Experimental API.</para>
             <para>Set the value of a blob property in a content mark by key. If a parameter</para>
@@ -3679,29 +3658,14 @@
             <para>Returns a handle to the font object held by |text| which retains ownership.</para>
             </summary>
         </member>
-        <member name="M:PDFiumCore.fpdf_edit.FPDFFontGetBaseFontName(PDFiumCore.FpdfFontT,System.SByte*,System.UInt64)">
+        <member name="M:PDFiumCore.fpdf_edit.FPDFFontGetFontName(PDFiumCore.FpdfFontT,System.SByte*,System.UInt32)">
             <summary>
             <para>Experimental API.</para>
-            <para>Get the base name of a font.</para>
-            <para>font   - the handle to the font object.</para>
-            <para>buffer - the address of a buffer that receives the base font name.</para>
-            <para>length - the size, in bytes, of |buffer|.</para>
-            <para>Returns the number of bytes in the base name (including the trailing NUL</para>
-            <para>character) on success, 0 on error. The base name is typically the font's</para>
-            <para>PostScript name. See descriptions of &quot;BaseFont&quot; in ISO 32000-1:2008 spec.</para>
-            <para>Regardless of the platform, the |buffer| is always in UTF-8 encoding.</para>
-            <para>If |length| is less than the returned length, or |buffer| is NULL, |buffer|</para>
-            <para>will not be modified.</para>
-            </summary>
-        </member>
-        <member name="M:PDFiumCore.fpdf_edit.FPDFFontGetFamilyName(PDFiumCore.FpdfFontT,System.SByte*,System.UInt64)">
-            <summary>
-            <para>Experimental API.</para>
-            <para>Get the family name of a font.</para>
+            <para>Get the font name of a font.</para>
             <para>font   - the handle to the font object.</para>
             <para>buffer - the address of a buffer that receives the font name.</para>
             <para>length - the size, in bytes, of |buffer|.</para>
-            <para>Returns the number of bytes in the family name (including the trailing NUL</para>
+            <para>Returns the number of bytes in the font name (including the trailing NUL</para>
             <para>character) on success, 0 on error.</para>
             <para>Regardless of the platform, the |buffer| is always in UTF-8 encoding.</para>
             <para>If |length| is less than the returned length, or |buffer| is NULL, |buffer|</para>
@@ -4205,9 +4169,7 @@
             <para>Parameters:</para>
             <para>page        -   Handle to the page, as returned by FPDF_LoadPage().</para>
             <para>Return value:</para>
-            <para>A handle to the structure tree or NULL on error. The caller owns the</para>
-            <para>returned handle and must use FPDF_StructTree_Close() to release it.</para>
-            <para>The handle should be released before |page| gets released.</para>
+            <para>A handle to the structure tree or NULL on error.</para>
             </summary>
         </member>
         <member name="M:PDFiumCore.fpdf_structtree.FPDF_StructTreeClose(PDFiumCore.FpdfStructtreeT)">
@@ -4238,10 +4200,7 @@
             <para>struct_tree -   Handle to the structure tree, as returned by FPDF_StructTree_LoadPage().</para>
             <para>index       -   The index for the child, 0-based.</para>
             <para>Return value:</para>
-            <para>The child at the n-th index or NULL on error. The caller does not</para>
-            <para>own the handle. The handle remains valid as long as |struct_tree|</para>
-            <para>remains valid.</para>
-            <para>Comments: The |index| must be less than the FPDF_StructTree_CountChildren() return value.</para>
+            <para>The child at the n-th index or NULL on error.</para>
             </summary>
         </member>
         <member name="M:PDFiumCore.fpdf_structtree.FPDF_StructElementGetAltText(PDFiumCore.FpdfStructelementT,System.IntPtr,System.UInt32)">
@@ -4329,7 +4288,6 @@
             <para>Return value:</para>
             <para>The marked content ID of the element. If no ID exists, returns</para>
             <para>-1.</para>
-            <para>Comments: FPDF_StructElement_GetMarkedContentIdAtIndex() may be able to extract more marked content IDs out of |struct_element|. This API may be deprecated in the future.</para>
             </summary>
         </member>
         <member name="M:PDFiumCore.fpdf_structtree.FPDF_StructElementGetType(PDFiumCore.FpdfStructelementT,System.IntPtr,System.UInt32)">
@@ -4396,7 +4354,7 @@
             <para>index          -   The index for the child, 0-based.</para>
             <para>Return value:</para>
             <para>The child at the n-th index or NULL on error.</para>
-            <para>Comments: If the child exists but is not an element, then this function will return NULL. This will also return NULL for out of bounds indices. The |index| must be less than the FPDF_StructElement_CountChildren() return value.</para>
+            <para>Comments: If the child exists but is not an element, then this function will return NULL. This will also return NULL for out of bounds indices.</para>
             </summary>
         </member>
         <member name="M:PDFiumCore.fpdf_structtree.FPDF_StructElementGetChildMarkedContentID(PDFiumCore.FpdfStructelementT,System.Int32)">
@@ -4408,7 +4366,7 @@
             <para>index          -   The index for the child, 0-based.</para>
             <para>Return value:</para>
             <para>The marked content ID of the child. If no ID exists, returns -1.</para>
-            <para>Comments: If the child exists but is not a stream or object, then this function will return -1. This will also return -1 for out of bounds indices. Compared to FPDF_StructElement_GetMarkedContentIdAtIndex, it is scoped to the current page. The |index| must be less than the FPDF_StructElement_CountChildren() return value.</para>
+            <para>Comments: If the child exists but is not a stream or object, then this function will return -1. This will also return -1 for out of bounds indices. Compared to FPDF_StructElement_GetMarkedContentIdAtIndex, it is scoped to the current page.</para>
             </summary>
         </member>
         <member name="M:PDFiumCore.fpdf_structtree.FPDF_StructElementGetParent(PDFiumCore.FpdfStructelementT)">
@@ -4441,7 +4399,7 @@
             <para>index          -   The index for the attribute object, 0-based.</para>
             <para>Return value:</para>
             <para>The attribute object at the n-th index or NULL on error.</para>
-            <para>Comments: If the attribute object exists but is not a dict, then this function will return NULL. This will also return NULL for out of bounds indices. The caller does not own the handle. The handle remains valid as long as |struct_element| remains valid. The |index| must be less than the FPDF_StructElement_GetAttributeCount() return value.</para>
+            <para>Comments: If the attribute object exists but is not a dict, then this function will return NULL. This will also return NULL for out of bounds indices.</para>
             </summary>
         </member>
         <member name="M:PDFiumCore.fpdf_structtree.FPDF_StructElementAttrGetCount(PDFiumCore.FpdfStructelementAttrT)">
@@ -4468,111 +4426,75 @@
             <para>TRUE if the operation was successful, FALSE otherwise.</para>
             </summary>
         </member>
-        <member name="M:PDFiumCore.fpdf_structtree.FPDF_StructElementAttrGetValue(PDFiumCore.FpdfStructelementAttrT,System.String)">
-            <summary>
-            <para>Function: FPDF_StructElement_Attr_GetValue</para>
-            <para>Get a handle to a value for an attribute in a structure element</para>
-            <para>attribute map.</para>
-            <para>Parameters:</para>
-            <para>struct_attribute   - Handle to the struct element attribute.</para>
-            <para>name               - The attribute name.</para>
-            <para>Return value:</para>
-            <para>Returns a handle to the value associated with the input, if any.</para>
-            <para>Returns NULL on failure. The caller does not own the handle.</para>
-            <para>The handle remains valid as long as |struct_attribute| remains</para>
-            <para>valid.</para>
-            </summary>
-        </member>
-        <member name="M:PDFiumCore.fpdf_structtree.FPDF_StructElementAttrGetType(PDFiumCore.FpdfStructelementAttrValueT)">
+        <member name="M:PDFiumCore.fpdf_structtree.FPDF_StructElementAttrGetType(PDFiumCore.FpdfStructelementAttrT,System.String)">
             <summary>
             <para>Function: FPDF_StructElement_Attr_GetType</para>
             <para>Get the type of an attribute in a structure element attribute map.</para>
             <para>Parameters:</para>
-            <para>value - Handle to the value.</para>
+            <para>struct_attribute   - Handle to the struct element attribute.</para>
+            <para>name               - The attribute name.</para>
             <para>Return value:</para>
             <para>Returns the type of the value, or FPDF_OBJECT_UNKNOWN in case of</para>
-            <para>failure. Note that this will never return FPDF_OBJECT_REFERENCE, as</para>
-            <para>references are always dereferenced.</para>
+            <para>failure.</para>
             </summary>
         </member>
-        <member name="M:PDFiumCore.fpdf_structtree.FPDF_StructElementAttrGetBooleanValue(PDFiumCore.FpdfStructelementAttrValueT,System.Int32@)">
+        <member name="M:PDFiumCore.fpdf_structtree.FPDF_StructElementAttrGetBooleanValue(PDFiumCore.FpdfStructelementAttrT,System.String,System.Int32@)">
             <summary>
             <para>Function: FPDF_StructElement_Attr_GetBooleanValue</para>
-            <para>Get the value of a boolean attribute in an attribute map as</para>
+            <para>Get the value of a boolean attribute in an attribute map by name as</para>
             <para>FPDF_BOOL. FPDF_StructElement_Attr_GetType() should have returned</para>
             <para>FPDF_OBJECT_BOOLEAN for this property.</para>
             <para>Parameters:</para>
-            <para>value     - Handle to the value.</para>
-            <para>out_value - A pointer to variable that will receive the value. Not filled if false is returned.</para>
+            <para>struct_attribute   - Handle to the struct element attribute.</para>
+            <para>name               - The attribute name.</para>
+            <para>out_value          - A pointer to variable that will receive the value. Not filled if false is returned.</para>
             <para>Return value:</para>
-            <para>Returns TRUE if the attribute maps to a boolean value, FALSE</para>
-            <para>otherwise.</para>
+            <para>Returns TRUE if the name maps to a boolean value, FALSE otherwise.</para>
             </summary>
         </member>
-        <member name="M:PDFiumCore.fpdf_structtree.FPDF_StructElementAttrGetNumberValue(PDFiumCore.FpdfStructelementAttrValueT,System.Single@)">
+        <member name="M:PDFiumCore.fpdf_structtree.FPDF_StructElementAttrGetNumberValue(PDFiumCore.FpdfStructelementAttrT,System.String,System.Single@)">
             <summary>
             <para>Function: FPDF_StructElement_Attr_GetNumberValue</para>
-            <para>Get the value of a number attribute in an attribute map as float.</para>
-            <para>FPDF_StructElement_Attr_GetType() should have returned</para>
+            <para>Get the value of a number attribute in an attribute map by name as</para>
+            <para>float. FPDF_StructElement_Attr_GetType() should have returned</para>
             <para>FPDF_OBJECT_NUMBER for this property.</para>
             <para>Parameters:</para>
-            <para>value     - Handle to the value.</para>
-            <para>out_value - A pointer to variable that will receive the value. Not filled if false is returned.</para>
+            <para>struct_attribute   - Handle to the struct element attribute.</para>
+            <para>name               - The attribute name.</para>
+            <para>out_value          - A pointer to variable that will receive the value. Not filled if false is returned.</para>
             <para>Return value:</para>
-            <para>Returns TRUE if the attribute maps to a number value, FALSE</para>
-            <para>otherwise.</para>
+            <para>Returns TRUE if the name maps to a number value, FALSE otherwise.</para>
             </summary>
         </member>
-        <member name="M:PDFiumCore.fpdf_structtree.FPDF_StructElementAttrGetStringValue(PDFiumCore.FpdfStructelementAttrValueT,System.IntPtr,System.UInt32,System.UInt32@)">
+        <member name="M:PDFiumCore.fpdf_structtree.FPDF_StructElementAttrGetStringValue(PDFiumCore.FpdfStructelementAttrT,System.String,System.IntPtr,System.UInt32,System.UInt32@)">
             <summary>
             <para>Function: FPDF_StructElement_Attr_GetStringValue</para>
-            <para>Get the value of a string attribute in an attribute map as string.</para>
-            <para>FPDF_StructElement_Attr_GetType() should have returned</para>
+            <para>Get the value of a string attribute in an attribute map by name as</para>
+            <para>string. FPDF_StructElement_Attr_GetType() should have returned</para>
             <para>FPDF_OBJECT_STRING or FPDF_OBJECT_NAME for this property.</para>
             <para>Parameters:</para>
-            <para>value      - Handle to the value.</para>
-            <para>buffer     - A buffer for holding the returned key in UTF-16LE. This is only modified if |buflen| is longer than the length of the key. Optional, pass null to just retrieve the size of the buffer needed.</para>
-            <para>buflen     - The length of the buffer.</para>
-            <para>out_buflen - A pointer to variable that will receive the minimum buffer size to contain the key. Not filled if FALSE is returned.</para>
+            <para>struct_attribute   - Handle to the struct element attribute.</para>
+            <para>name               - The attribute name.</para>
+            <para>buffer             - A buffer for holding the returned key in UTF-16LE. This is only modified if |buflen| is longer than the length of the key. Optional, pass null to just retrieve the size of the buffer needed.</para>
+            <para>buflen             - The length of the buffer.</para>
+            <para>out_buflen         - A pointer to variable that will receive the minimum buffer size to contain the key. Not filled if FALSE is returned.</para>
             <para>Return value:</para>
-            <para>Returns TRUE if the attribute maps to a string value, FALSE</para>
-            <para>otherwise.</para>
+            <para>Returns TRUE if the name maps to a string value, FALSE otherwise.</para>
             </summary>
         </member>
-        <member name="M:PDFiumCore.fpdf_structtree.FPDF_StructElementAttrGetBlobValue(PDFiumCore.FpdfStructelementAttrValueT,System.IntPtr,System.UInt32,System.UInt32@)">
+        <member name="M:PDFiumCore.fpdf_structtree.FPDF_StructElementAttrGetBlobValue(PDFiumCore.FpdfStructelementAttrT,System.String,System.IntPtr,System.UInt32,System.UInt32@)">
             <summary>
             <para>Function: FPDF_StructElement_Attr_GetBlobValue</para>
-            <para>Get the value of a blob attribute in an attribute map as string.</para>
+            <para>Get the value of a blob attribute in an attribute map by name as</para>
+            <para>string.</para>
             <para>Parameters:</para>
-            <para>value      - Handle to the value.</para>
-            <para>buffer     - A buffer for holding the returned value. This is only modified if |buflen| is at least as long as the length of the value. Optional, pass null to just retrieve the size of the buffer needed.</para>
-            <para>buflen     - The length of the buffer.</para>
-            <para>out_buflen - A pointer to variable that will receive the minimum buffer size to contain the key. Not filled if FALSE is returned.</para>
+            <para>struct_attribute   - Handle to the struct element attribute.</para>
+            <para>name               - The attribute name.</para>
+            <para>buffer             - A buffer for holding the returned value. This is only modified if |buflen| is at least as long as the length of the value. Optional, pass null to just retrieve the size of the buffer needed.</para>
+            <para>buflen             - The length of the buffer.</para>
+            <para>out_buflen         - A pointer to variable that will receive the minimum buffer size to contain the key. Not filled if FALSE is returned.</para>
             <para>Return value:</para>
-            <para>Returns TRUE if the attribute maps to a string value, FALSE</para>
-            <para>otherwise.</para>
-            </summary>
-        </member>
-        <member name="M:PDFiumCore.fpdf_structtree.FPDF_StructElementAttrCountChildren(PDFiumCore.FpdfStructelementAttrValueT)">
-            <summary>
-            <para>Function: FPDF_StructElement_Attr_CountChildren</para>
-            <para>Count the number of children values in an attribute.</para>
-            <para>Parameters:</para>
-            <para>value - Handle to the value.</para>
-            <para>Return value:</para>
-            <para>The number of children, or -1 on error.</para>
-            </summary>
-        </member>
-        <member name="M:PDFiumCore.fpdf_structtree.FPDF_StructElementAttrGetChildAtIndex(PDFiumCore.FpdfStructelementAttrValueT,System.Int32)">
-            <summary>
-            <para>Function: FPDF_StructElement_Attr_GetChildAtIndex</para>
-            <para>Get a child from an attribute.</para>
-            <para>Parameters:</para>
-            <para>value - Handle to the value.</para>
-            <para>index - The index for the child, 0-based.</para>
-            <para>Return value:</para>
-            <para>The child at the n-th index or NULL on error.</para>
-            <para>Comments: The |index| must be less than the FPDF_StructElement_Attr_CountChildren() return value.</para>
+            <para>Returns TRUE if the name maps to a string value, FALSE otherwise.</para>
             </summary>
         </member>
         <member name="M:PDFiumCore.fpdf_structtree.FPDF_StructElementGetMarkedContentIdCount(PDFiumCore.FpdfStructelementT)">
@@ -4595,7 +4517,6 @@
             <para>Return value:</para>
             <para>The marked content ID of the element. If no ID exists, returns</para>
             <para>-1.</para>
-            <para>Comments: The |index| must be less than the FPDF_StructElement_GetMarkedContentIdCount() return value. This will likely supersede FPDF_StructElement_GetMarkedContentID().</para>
             </summary>
         </member>
         <member name="M:PDFiumCore.fpdf_sysfontinfo.FPDF_GetDefaultTTFMap">
@@ -4608,32 +4529,6 @@
             <para>None.</para>
             <para>Return Value:</para>
             <para>Pointer to the Charset Font Map.</para>
-            <para>Note:</para>
-            <para>Once FPDF_GetDefaultTTFMapCount() and FPDF_GetDefaultTTFMapEntry() are no</para>
-            <para>longer experimental, this API will be marked as deprecated.</para>
-            <para>See https://crbug.com/348468114</para>
-            </summary>
-        </member>
-        <member name="M:PDFiumCore.fpdf_sysfontinfo.FPDF_GetDefaultTTFMapCount">
-            <summary>
-            <para>Function: FPDF_GetDefaultTTFMapCount</para>
-            <para>Returns the number of entries in the default character set to TT Font name</para>
-            <para>map.</para>
-            <para>Parameters:</para>
-            <para>None.</para>
-            <para>Return Value:</para>
-            <para>The number of entries in the map.</para>
-            </summary>
-        </member>
-        <member name="M:PDFiumCore.fpdf_sysfontinfo.FPDF_GetDefaultTTFMapEntry(System.UInt64)">
-            <summary>
-            <para>Function: FPDF_GetDefaultTTFMapEntry</para>
-            <para>Returns an entry in the default character set to TT Font name map.</para>
-            <para>Parameters:</para>
-            <para>index    -   The index to the entry in the map to retrieve.</para>
-            <para>Return Value:</para>
-            <para>A pointer to the entry, if it is in the map, or NULL if the index is out</para>
-            <para>of bounds.</para>
             </summary>
         </member>
         <member name="M:PDFiumCore.fpdf_sysfontinfo.FPDF_AddInstalledFont(System.IntPtr,System.String,System.Int32)">
@@ -4736,19 +4631,6 @@
             <para>the return value will be zero.</para>
             </summary>
         </member>
-        <member name="M:PDFiumCore.fpdf_text.FPDFTextGetTextObject(PDFiumCore.FpdfTextpageT,System.Int32)">
-            <summary>
-            <para>Function: FPDFText_GetTextObject</para>
-            <para>Get the FPDF_PAGEOBJECT associated with a given character.</para>
-            <para>Parameters:</para>
-            <para>text_page   -   Handle to a text page information structure. Returned by FPDFText_LoadPage function.</para>
-            <para>index       -   Zero-based index of the character.</para>
-            <para>Return value:</para>
-            <para>The associated text object for the character at |index|, or NULL on</para>
-            <para>error. The returned text object, if non-null, is of type</para>
-            <para>|FPDF_PAGEOBJ_TEXT|. The caller does not own the returned object.</para>
-            </summary>
-        </member>
         <member name="M:PDFiumCore.fpdf_text.FPDFTextIsGenerated(PDFiumCore.FpdfTextpageT,System.Int32)">
             <summary>
             <para>Function: FPDFText_IsGenerated</para>
@@ -4830,6 +4712,20 @@
             <para>On success, return the font weight of the particular character. If</para>
             <para>|text_page| is invalid, if |index| is out of bounds, or if the</para>
             <para>character's text object is undefined, return -1.</para>
+            </summary>
+        </member>
+        <member name="M:PDFiumCore.fpdf_text.FPDFTextGetTextRenderMode(PDFiumCore.FpdfTextpageT,System.Int32)">
+            <summary>
+            <para>Function: FPDFText_GetTextRenderMode</para>
+            <para>Get text rendering mode of character.</para>
+            <para>Parameters:</para>
+            <para>text_page   -   Handle to a text page information structure. Returned by FPDFText_LoadPage function.</para>
+            <para>index       -   Zero-based index of the character.</para>
+            <para>Return Value:</para>
+            <para>On success, return the render mode value. A valid value is of type</para>
+            <para>FPDF_TEXT_RENDERMODE. If |text_page| is invalid, if |index| is out</para>
+            <para>of bounds, or if the text object is undefined, then return</para>
+            <para>FPDF_TEXTRENDERMODE_UNKNOWN.</para>
             </summary>
         </member>
         <member name="M:PDFiumCore.fpdf_text.FPDFTextGetFillColor(PDFiumCore.FpdfTextpageT,System.Int32,System.UInt32@,System.UInt32@,System.UInt32@,System.UInt32@)">
@@ -4964,12 +4860,12 @@
             <para>Parameters:</para>
             <para>text_page   -   Handle to a text page information structure. Returned by FPDFText_LoadPage function.</para>
             <para>start_index -   Index for the start characters.</para>
-            <para>count       -   Number of UCS-2 values to be extracted.</para>
-            <para>result      -   A buffer (allocated by application) receiving the extracted UCS-2 values. The buffer must be able to hold `count` UCS-2 values plus a terminator.</para>
+            <para>count       -   Number of characters to be extracted.</para>
+            <para>result      -   A buffer (allocated by application) receiving the extracted unicodes. The size of the buffer must be able to hold the number of characters plus a terminator.</para>
             <para>Return Value:</para>
             <para>Number of characters written into the result buffer, including the</para>
             <para>trailing terminator.</para>
-            <para>Comments: This function ignores characters without UCS-2 representations. It considers all characters on the page, even those that are not visible when the page has a cropbox. To filter out the characters outside of the cropbox, use FPDF_GetPageBoundingBox() and FPDFText_GetCharBox().</para>
+            <para>Comments: This function ignores characters without unicode information. It returns all characters on the page, even those that are not visible when the page has a cropbox. To filter out the characters outside of the cropbox, use FPDF_GetPageBoundingBox() and FPDFText_GetCharBox().</para>
             </summary>
         </member>
         <member name="M:PDFiumCore.fpdf_text.FPDFTextCountRects(PDFiumCore.FpdfTextpageT,System.Int32,System.Int32)">
@@ -5017,19 +4913,19 @@
             <para>top         -   Top boundary.</para>
             <para>right       -   Right boundary.</para>
             <para>bottom      -   Bottom boundary.</para>
-            <para>buffer      -   Caller-allocated buffer to receive UTF-16 values.</para>
-            <para>buflen      -   Number of UTF-16 values (not bytes) that `buffer` is capable of holding.</para>
+            <para>buffer      -   A unicode buffer.</para>
+            <para>buflen      -   Number of characters (not bytes) for the buffer, excluding an additional terminator.</para>
             <para>Return Value:</para>
-            <para>If buffer is NULL or buflen is zero, return number of UTF-16</para>
-            <para>values (not bytes) of text present within the rectangle, excluding</para>
-            <para>a terminating NUL. Generally you should pass a buffer at least one</para>
+            <para>If buffer is NULL or buflen is zero, return number of characters</para>
+            <para>(not bytes) of text present within the rectangle, excluding a</para>
+            <para>terminating NUL. Generally you should pass a buffer at least one</para>
             <para>larger than this if you want a terminating NUL, which will be</para>
-            <para>provided if space is available. Otherwise, return number of UTF-16</para>
-            <para>values copied into the buffer, including the terminating NUL when</para>
-            <para>space for it is available.</para>
+            <para>provided if space is available. Otherwise, return number of</para>
+            <para>characters copied into the buffer, including the terminating NUL</para>
+            <para>when space for it is available.</para>
             <para>Comment:</para>
             <para>If the buffer is too small, as much text as will fit is copied into</para>
-            <para>it. May return a split surrogate in that case.</para>
+            <para>it.</para>
             </summary>
         </member>
         <member name="M:PDFiumCore.fpdf_text.FPDFTextFindStart(PDFiumCore.FpdfTextpageT,System.UInt16@,System.UInt32,System.Int32)">
@@ -5233,6 +5129,7 @@
         </member>
         <member name="M:PDFiumCore.fpdf_transformpage.FPDFPageSetMediaBox(PDFiumCore.FpdfPageT,System.Single,System.Single,System.Single,System.Single)">
             <summary>
+            <para>*</para>
             <para>Set &quot;MediaBox&quot; entry to the page dictionary.</para>
             <para>page   - Handle to a page.</para>
             <para>left   - The left of the rectangle.</para>
@@ -5243,6 +5140,7 @@
         </member>
         <member name="M:PDFiumCore.fpdf_transformpage.FPDFPageSetCropBox(PDFiumCore.FpdfPageT,System.Single,System.Single,System.Single,System.Single)">
             <summary>
+            <para>*</para>
             <para>Set &quot;CropBox&quot; entry to the page dictionary.</para>
             <para>page   - Handle to a page.</para>
             <para>left   - The left of the rectangle.</para>
@@ -5253,6 +5151,7 @@
         </member>
         <member name="M:PDFiumCore.fpdf_transformpage.FPDFPageSetBleedBox(PDFiumCore.FpdfPageT,System.Single,System.Single,System.Single,System.Single)">
             <summary>
+            <para>*</para>
             <para>Set &quot;BleedBox&quot; entry to the page dictionary.</para>
             <para>page   - Handle to a page.</para>
             <para>left   - The left of the rectangle.</para>
@@ -5263,6 +5162,7 @@
         </member>
         <member name="M:PDFiumCore.fpdf_transformpage.FPDFPageSetTrimBox(PDFiumCore.FpdfPageT,System.Single,System.Single,System.Single,System.Single)">
             <summary>
+            <para>*</para>
             <para>Set &quot;TrimBox&quot; entry to the page dictionary.</para>
             <para>page   - Handle to a page.</para>
             <para>left   - The left of the rectangle.</para>
@@ -5273,6 +5173,7 @@
         </member>
         <member name="M:PDFiumCore.fpdf_transformpage.FPDFPageSetArtBox(PDFiumCore.FpdfPageT,System.Single,System.Single,System.Single,System.Single)">
             <summary>
+            <para>*</para>
             <para>Set &quot;ArtBox&quot; entry to the page dictionary.</para>
             <para>page   - Handle to a page.</para>
             <para>left   - The left of the rectangle.</para>
@@ -5283,6 +5184,7 @@
         </member>
         <member name="M:PDFiumCore.fpdf_transformpage.FPDFPageGetMediaBox(PDFiumCore.FpdfPageT,System.Single@,System.Single@,System.Single@,System.Single@)">
             <summary>
+            <para>*</para>
             <para>Get &quot;MediaBox&quot; entry from the page dictionary.</para>
             <para>page   - Handle to a page.</para>
             <para>left   - Pointer to a float value receiving the left of the rectangle.</para>
@@ -5295,6 +5197,7 @@
         </member>
         <member name="M:PDFiumCore.fpdf_transformpage.FPDFPageGetCropBox(PDFiumCore.FpdfPageT,System.Single@,System.Single@,System.Single@,System.Single@)">
             <summary>
+            <para>*</para>
             <para>Get &quot;CropBox&quot; entry from the page dictionary.</para>
             <para>page   - Handle to a page.</para>
             <para>left   - Pointer to a float value receiving the left of the rectangle.</para>
@@ -5307,6 +5210,7 @@
         </member>
         <member name="M:PDFiumCore.fpdf_transformpage.FPDFPageGetBleedBox(PDFiumCore.FpdfPageT,System.Single@,System.Single@,System.Single@,System.Single@)">
             <summary>
+            <para>*</para>
             <para>Get &quot;BleedBox&quot; entry from the page dictionary.</para>
             <para>page   - Handle to a page.</para>
             <para>left   - Pointer to a float value receiving the left of the rectangle.</para>
@@ -5319,6 +5223,7 @@
         </member>
         <member name="M:PDFiumCore.fpdf_transformpage.FPDFPageGetTrimBox(PDFiumCore.FpdfPageT,System.Single@,System.Single@,System.Single@,System.Single@)">
             <summary>
+            <para>*</para>
             <para>Get &quot;TrimBox&quot; entry from the page dictionary.</para>
             <para>page   - Handle to a page.</para>
             <para>left   - Pointer to a float value receiving the left of the rectangle.</para>
@@ -5331,6 +5236,7 @@
         </member>
         <member name="M:PDFiumCore.fpdf_transformpage.FPDFPageGetArtBox(PDFiumCore.FpdfPageT,System.Single@,System.Single@,System.Single@,System.Single@)">
             <summary>
+            <para>*</para>
             <para>Get &quot;ArtBox&quot; entry from the page dictionary.</para>
             <para>page   - Handle to a page.</para>
             <para>left   - Pointer to a float value receiving the left of the rectangle.</para>
@@ -5343,6 +5249,7 @@
         </member>
         <member name="M:PDFiumCore.fpdf_transformpage.FPDFPageTransFormWithClip(PDFiumCore.FpdfPageT,PDFiumCore.FS_MATRIX_,PDFiumCore.FS_RECTF_)">
             <summary>
+            <para>*</para>
             <para>Apply transforms to |page|.</para>
             <para>If |matrix| is provided it will be applied to transform the page.</para>
             <para>If |clipRect| is provided it will be used to clip the resulting page.</para>
@@ -5357,6 +5264,7 @@
         </member>
         <member name="M:PDFiumCore.fpdf_transformpage.FPDFPageObjTransformClipPath(PDFiumCore.FpdfPageobjectT,System.Double,System.Double,System.Double,System.Double,System.Double,System.Double)">
             <summary>
+            <para>*</para>
             <para>Transform (scale, rotate, shear, move) the clip path of page object.</para>
             <para>page_object - Handle to a page object. Returned by</para>
             <para>FPDFPageObj_NewImageObj().</para>
@@ -5410,6 +5318,7 @@
         </member>
         <member name="M:PDFiumCore.fpdf_transformpage.FPDF_CreateClipPath(System.Single,System.Single,System.Single,System.Single)">
             <summary>
+            <para>*</para>
             <para>Create a new clip path, with a rectangle inserted.</para>
             <para>Caller takes ownership of the returned FPDF_CLIPPATH. It should be freed with</para>
             <para>FPDF_DestroyClipPath().</para>
@@ -5421,12 +5330,14 @@
         </member>
         <member name="M:PDFiumCore.fpdf_transformpage.FPDF_DestroyClipPath(PDFiumCore.FpdfClippathT)">
             <summary>
+            <para>*</para>
             <para>Destroy the clip path.</para>
             <para>clipPath - A handle to the clip path. It will be invalid after this call.</para>
             </summary>
         </member>
         <member name="M:PDFiumCore.fpdf_transformpage.FPDFPageInsertClipPath(PDFiumCore.FpdfPageT,PDFiumCore.FpdfClippathT)">
             <summary>
+            <para>*</para>
             <para>Clip the page content, the page content that outside the clipping region</para>
             <para>become invisible.</para>
             <para>A clip path will be inserted before the page content stream or content array.</para>

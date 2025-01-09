@@ -2,6 +2,7 @@
 using PDFDict.SDK.Sharp.Tools;
 using System.Diagnostics;
 using System.Drawing;
+using System.Security.Cryptography;
 
 namespace PDFDict.SDK.Sharp.Sample
 {
@@ -9,11 +10,15 @@ namespace PDFDict.SDK.Sharp.Sample
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Run ExtractImages sample:");
+            Console.WriteLine("Run sample:");
+            byte src = 3;
+            byte dst = (byte)~src;
+            Console.WriteLine(dst);
 
             PDFSharpLib.Initialize();
 
-            ExtractTable();
+            // OCRPages();
+            // ExtractTable();
             // ExtractImages();
             // ExtractText();
             // OCRImages();
@@ -21,7 +26,7 @@ namespace PDFDict.SDK.Sharp.Sample
             // ReadTags();
             // AddPageAsXObject();
             // FillForm();
-            // RenderPDF();
+            RenderPDF();
             // ReadAnnots();
             // AddQRCode();
 
@@ -35,8 +40,10 @@ namespace PDFDict.SDK.Sharp.Sample
 
         private static void ExtractTable()
         {
-            string pdf = Path.Combine(Environment.CurrentDirectory, @"files/pdf/table.pdf");
-            PDFTools.ExtractTable(pdf);
+            string pdf = Path.Combine(Environment.CurrentDirectory, @"files/pdf/table/campaign_donors.pdf");
+            // PDFTools.ExtractTable(pdf);
+            // PDFTools.Test(pdf);
+            // PDFTools.TestLine(pdf);
         }
 
         private static void OCRImages()
@@ -58,7 +65,8 @@ namespace PDFDict.SDK.Sharp.Sample
 
         private static void OCRPages()
         {
-            string input = Path.Combine(Environment.CurrentDirectory, @"files/pdf/ocr/invoice.pdf");
+            //            string input = Path.Combine(Environment.CurrentDirectory, @"files/pdf/ocr/invoice.pdf");
+            string input = Path.Combine(Environment.CurrentDirectory, @"c:/temp/bbb.pdf");
             Console.WriteLine(Path.Combine(Environment.CurrentDirectory, @"files/img"));
             var res = PDFTools.OCRPages(input, Path.Combine(Environment.CurrentDirectory, @"files/img"));
             for (int i = 0; i < res.Count; i++)
@@ -71,7 +79,7 @@ namespace PDFDict.SDK.Sharp.Sample
 
         private static void ExtractImages()
         {
-            string input = Path.Combine(Environment.CurrentDirectory, @"files/pdf/pdfua/FlyerPDFUA-en2015.pdf");
+            string input = Path.Combine(Environment.CurrentDirectory, @"files/pdf/table/china.pdf");
             Console.WriteLine(Path.Combine(Environment.CurrentDirectory, @"files/img"));
             PDFTools.ExtractImages(input, "png", Path.Combine(Environment.CurrentDirectory, @"files/img"));
         }
@@ -148,7 +156,7 @@ namespace PDFDict.SDK.Sharp.Sample
 
         private static void RenderPDF(bool grayscale = false)
         {
-            string pdf = Path.Combine(Environment.CurrentDirectory, @"files/pdf/forms/acroform.pdf");
+            string pdf = Path.Combine(Environment.CurrentDirectory, @"files/pdf/table/tabula/MultiColumn.pdf");
             string outputFolder = Path.Combine(Environment.CurrentDirectory, @"files/pdf/images");
             Console.WriteLine($"{outputFolder}");
             if (grayscale)
@@ -157,7 +165,7 @@ namespace PDFDict.SDK.Sharp.Sample
             }
             else
             {
-                PDFTools.Render(pdf, outputFolder, renderFlag: RenderFlag.FPDF_ANNOT);
+                PDFTools.Render(pdf, outputFolder, resolution:300, renderFlag: RenderFlag.FPDF_ANNOT);
             }
         }
 

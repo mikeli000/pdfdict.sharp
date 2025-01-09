@@ -183,7 +183,7 @@ namespace PDFDict.SDK.Sharp.Core
 
                     var pdfFont = PDFFont.From(fontPtr);
                     fontName = Marshal.AllocHGlobal(128);
-                    var len = fpdf_edit.FPDFFontGetFontName(fontPtr, (sbyte*)fontName, 128);
+                    var len = fpdf_edit.FPDFFontGetFamilyName(fontPtr, (sbyte*)fontName, 128);
                     string name = Marshal.PtrToStringAnsi(fontName, (int)len);
                     name = name.Substring(0, name.Length - 1); // '\0' at the end
                     _fontDict.Add(name, pdfFont);

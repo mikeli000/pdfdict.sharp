@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PDFDict.SDK.Sharp.Core
+namespace PDFDict.SDK.Sharp.Core.Tabula
 {
     public class TextChunk
     {
@@ -24,20 +24,34 @@ namespace PDFDict.SDK.Sharp.Core
         }
     }
 
-    public class PageTextChunks
+    public class PagedTextThread
     {
         public int PageIndex { get; private set; }
-        public List<TextChunk> TextChunks { get; private set; }
 
-        public PageTextChunks(int pageIndex)
+        public List<TextRun> TextRuns { get; private set; }
+
+        //public List<TextChunk> TextChunks { get; private set; }
+
+        public PagedTextThread(int pageIndex)
         {
             PageIndex = pageIndex;
-            TextChunks = new List<TextChunk>();
+            TextRuns = new List<TextRun>();
+            //TextChunks = new List<TextChunk>();
         }
 
-        public void AddTextChunk(RectangleF bbox, string text)
+        public void AddTextRun(RectangleF bbox, string text)
         {
-            TextChunks.Add(new TextChunk(bbox, text));
+            TextRuns.Add(new TextRun() 
+            {
+                Text = text,
+                BBox = bbox
+            });
         }
+    }
+
+    public class TextRun
+    {
+        public string Text;
+        public RectangleF BBox;
     }
 }
