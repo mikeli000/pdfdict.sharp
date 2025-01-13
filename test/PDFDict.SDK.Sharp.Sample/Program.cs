@@ -1,8 +1,6 @@
 ﻿using PDFDict.SDK.Sharp.Core;
 using PDFDict.SDK.Sharp.Tools;
-using System.Diagnostics;
 using System.Drawing;
-using System.Security.Cryptography;
 
 namespace PDFDict.SDK.Sharp.Sample
 {

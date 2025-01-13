@@ -8,11 +8,11 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
-  <ItemGroup>
+  <!--<ItemGroup>
     <PackageReference Include="NumSharp" Version="0.30.0" />
     <PackageReference Include="OpenCvSharp4" Version="4.10.0.20241108" />
     <PackageReference Include="OpenCvSharp4.runtime.win" Version="4.10.0.20241108" />
-  </ItemGroup>
+  </ItemGroup>-->
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\PDFDict.SDK.Sharp\PDFDict.SDK.Sharp.csproj" />
