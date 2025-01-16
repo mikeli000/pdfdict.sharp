@@ -77,7 +77,7 @@ namespace PDFDict.SDK.Sharp.Core
             return buf.ToString();
         }
 
-        public PagedTextThread GetTextRun()
+        public PagedTextThread GetTextThread()
         {
             var pageTextPtr = fpdf_text.FPDFTextLoadPage(_pagePtr);
             int charCount = fpdf_text.FPDFTextCountChars(pageTextPtr);
@@ -290,8 +290,6 @@ namespace PDFDict.SDK.Sharp.Core
 
                 i += textRun.Length;
             }
-
-            Console.WriteLine($"Char count: {cc}, {charCount}");
         }
 
         public bool Flatten()
