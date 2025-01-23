@@ -1,4 +1,5 @@
 ﻿using PDFDict.SDK.Sharp.Core;
+using PDFDict.SDK.Sharp.Core.Contents.Distillar;
 using System.Drawing;
 
 namespace PDFDict.SDK.Sharp.Tools
@@ -21,12 +22,16 @@ namespace PDFDict.SDK.Sharp.Tools
                     var page = pdfDoc.LoadPage(i);
 
                     var pageThread = page.BuildPageThread();
+
+                    PageThreadDistillar.Distill(pageThread);
+
+
                     foreach (var textEle in pageThread.GetContentList())
                     {
-                        Console.WriteLine(textEle);
-                        page.DrawRect(textEle.BBox, new DrawingParams { Stroke = true, Fill = false, StrokeColor = Color.Blue, StrokeWidth = 0.5f });
+                        //Console.WriteLine(textEle);
+                        //page.DrawRect(textEle.BBox, new DrawingParams { Stroke = true, Fill = false, StrokeColor = Color.Blue, StrokeWidth = 0.5f });
 
-                        var gs = new DrawingParams { Stroke = true, Fill = false, StrokeColor = Color.Red, StrokeWidth = 0.5f };
+                        //var gs = new DrawingParams { Stroke = true, Fill = false, StrokeColor = Color.Red, StrokeWidth = 0.5f };
                         //page.BeginGraphics(gs);
                         //page.BeginPath(0, 0);
                         //page.MoveTo((float)((TextElement)textEle).GetBaselineX(), (float)((TextElement)textEle).GetBaselineY());

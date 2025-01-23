@@ -3,7 +3,6 @@ using PDFDict.SDK.Sharp.Core.Tabula;
 using PDFiumCore;
 using System.Drawing;
 using System.Text;
-using Tesseract;
 
 namespace PDFDict.SDK.Sharp.Core
 {
@@ -190,14 +189,13 @@ namespace PDFDict.SDK.Sharp.Core
                 GraphicsState gState = new GraphicsState();
                 TextState textState = new TextState();
                 gState.TextState = textState;
-                
-                System.Drawing.Drawing2D.Matrix matrix = new System.Drawing.Drawing2D.Matrix(1, 0, 0, 1, 0, 0);
+
                 unsafe
                 {
                     using FS_MATRIX_ fm = new FS_MATRIX_();
                     if (fpdf_edit.FPDFPageObjGetMatrix(textObj, fm) > 0)
                     {
-                        matrix = new System.Drawing.Drawing2D.Matrix(fm.A, fm.B, fm.C, fm.D, fm.E, fm.F);
+                        gState.Matrix = new Matrix(fm.A, fm.B, fm.C, fm.D, fm.E, fm.F);
                     }
                 }
 

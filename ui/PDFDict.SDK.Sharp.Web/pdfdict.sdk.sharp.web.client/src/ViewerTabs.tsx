@@ -3,10 +3,12 @@ import type { RadioChangeEvent, TabsProps } from 'antd';
 import { Radio, Tabs } from 'antd';
 import HomePage from './HomePage';
 import PageViewTab from './PageViewTab';
+import {FileInfo} from './api';
 
 type TargetKey = React.MouseEvent | React.KeyboardEvent | string;
 
 const ViewerTabs: React.FC = () => {
+    const [msg] = useState<string>('Hello World');
     const [size, setSize] = useState<'small' | 'middle' | 'large'>('small');
     const [activeKey, setActiveKey] = useState('1');
     const [items, setItems] = useState<TabsProps['items']>([
@@ -14,7 +16,7 @@ const ViewerTabs: React.FC = () => {
             label: 'Home',
             key: '1',
             closeIcon: false,
-            children: <HomePage />,
+            children: <PageViewTab />,
         },
         {
             label: 'Tab 2',
@@ -38,7 +40,7 @@ const ViewerTabs: React.FC = () => {
                 children: `Content of editable tab ${newKey}`,
             },
         ]);
-        setActiveKey(newKey);
+        // setActiveKey(newKey);
     };
 
     const remove = (targetKey: TargetKey) => {

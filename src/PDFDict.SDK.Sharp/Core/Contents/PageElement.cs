@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Drawing;
 
 namespace PDFDict.SDK.Sharp.Core.Contents
 {
@@ -31,6 +26,7 @@ namespace PDFDict.SDK.Sharp.Core.Contents
     public class GraphicsState : IEquatable<GraphicsState>
     {
         public TextState TextState;
+        public Matrix Matrix;
         public ColorState NonStrokingColor;
         public ColorState StrokingColor;
 

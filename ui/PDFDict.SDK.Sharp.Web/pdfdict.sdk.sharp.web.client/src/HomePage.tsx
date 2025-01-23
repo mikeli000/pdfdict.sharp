@@ -1,22 +1,47 @@
 import React from 'react';
-import { Card, Flex } from 'antd';
-import FileUploader from './FileUploader';
+import { Col, Divider, Row } from 'antd';
 
-const cardStyle: React.CSSProperties = {
-    display: 'inline-flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: '50%',
+const style: React.CSSProperties = { background: '#0092ff', padding: '8px 0' };
+
+const rowStyle = {
+    width: '60%',
+    alignContent: 'center',
+    margin: 'auto',
 };
 
 const HomePage: React.FC = () => (
-    <Card hoverable style={cardStyle} styles={{ body: { padding: 2, overflow: 'hidden' } }}>
-        <Flex justify="space-between">
-            <Flex>
-                <FileUploader />
-            </Flex>
-        </Flex>
-    </Card>
+    <>
+        <Divider orientation="left">Horizontal</Divider>
+        <Row gutter={16} style={rowStyle}>
+            <Col className="gutter-row" span={6}>
+                <div style={style}>col-6</div>
+            </Col>
+            <Col className="gutter-row" span={6}>
+                <div style={style}>col-6</div>
+            </Col>
+            <Col className="gutter-row" span={6}>
+                <div style={style}>col-6</div>
+            </Col>
+            <Col className="gutter-row" span={6}>
+                <div style={style}>col-6</div>
+            </Col>
+        </Row>
+        <Divider orientation="left">Responsive</Divider>
+        <Row gutter={{ xs: 8, sm: 16, md: 24, lg: 32 }} style={rowStyle}>
+            <Col className="gutter-row" span={6}>
+                <div style={style}>col-6</div>
+            </Col>
+            <Col className="gutter-row" span={6}>
+                <div style={style}>col-6</div>
+            </Col>
+            <Col className="gutter-row" span={6}>
+                <div style={style}>col-6</div>
+            </Col>
+            <Col className="gutter-row" span={6}>
+                <div style={style}>col-6</div>
+            </Col>
+        </Row>
+    </>
 );
 
 export default HomePage;

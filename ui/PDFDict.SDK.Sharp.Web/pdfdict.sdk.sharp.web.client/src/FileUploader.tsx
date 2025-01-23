@@ -4,6 +4,7 @@ import type { UploadProps } from 'antd';
 import { message, Upload } from 'antd';
 
 const { Dragger } = Upload;
+let callback = () => {};
 
 const props: UploadProps = {
     name: 'file',
@@ -16,7 +17,10 @@ const props: UploadProps = {
         }
         if (status === 'done') {
             const response = info.file.response;
-            console.log('Server response:', response);
+            var sessionId = response["sessionId"];
+
+            callback();
+
             message.success(`${info.file.name} file uploaded successfully.`);
         } else if (status === 'error') {
             message.error(`${info.file.name} file upload failed.`);
@@ -27,17 +31,28 @@ const props: UploadProps = {
     },
 };
 
-const FileUploader: React.FC = () => (
-    <Dragger {...props}>
-        <p className="ant-upload-drag-icon">
-            <InboxOutlined />
-        </p>
-        <p className="ant-upload-text">Click or drag file to this area to upload</p>
-        <p className="ant-upload-hint">
-            Support for a single or bulk upload. Strictly prohibited from uploading company data or other
-            banned files.
-        </p>
-    </Dragger>
-);
+interface FileUploaderProps {
+    msg: string;
+    addTab: () => void;
+}
+
+const FileUploader: React.FC<FileUploaderProps> = ({msg, addTab}) => {
+    console.log(msg, addTab);
+    
+    callback = addTab;
+
+    return (
+        <Dragger {...props}>
+            <p className="ant-upload-drag-icon">
+                <InboxOutlined />
+            </p>
+            <p className="ant-upload-text">Click or drag file to this area to upload</p>
+            <p className="ant-upload-hint">
+                Support for a single or bulk upload. Strictly prohibited from uploading company data or other
+                banned files.
+            </p>
+        </Dragger>
+    );
+}
 
 export default FileUploader;

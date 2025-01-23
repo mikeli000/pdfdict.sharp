@@ -20,11 +20,11 @@ namespace PDFDict.SDK.Sharp.Sample
             // ExtractImages();
             // ExtractText();
             // OCRImages();
-            // OCRPages();
+            OCRPages();
             // ReadTags();
             // AddPageAsXObject();
             // FillForm();
-            RenderPDF();
+            // RenderPDF();
             // ReadAnnots();
             // AddQRCode();
 
@@ -39,7 +39,7 @@ namespace PDFDict.SDK.Sharp.Sample
         private static void ExtractTable()
         {
             string pdf = Path.Combine(Environment.CurrentDirectory, @"files/pdf/table/campaign_donors.pdf");
-            // PDFTools.ExtractTable(pdf);
+            PDFTools.ExtractTable(pdf);
             // PDFTools.Test(pdf);
             // PDFTools.TestLine(pdf);
         }
@@ -63,8 +63,8 @@ namespace PDFDict.SDK.Sharp.Sample
 
         private static void OCRPages()
         {
-            //            string input = Path.Combine(Environment.CurrentDirectory, @"files/pdf/ocr/invoice.pdf");
-            string input = Path.Combine(Environment.CurrentDirectory, @"c:/temp/bbb.pdf");
+            string input = Path.Combine(Environment.CurrentDirectory, @"files/pdf/ocr/invoice.pdf");
+            //string input = Path.Combine(Environment.CurrentDirectory, @"c:/temp/bbb.pdf");
             Console.WriteLine(Path.Combine(Environment.CurrentDirectory, @"files/img"));
             var res = PDFTools.OCRPages(input, Path.Combine(Environment.CurrentDirectory, @"files/img"));
             for (int i = 0; i < res.Count; i++)

@@ -13,8 +13,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PDFDict.SDK.Sharp.Web.Serve
 EndProject
 Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "pdfdict.sdk.sharp.web.client", "ui\PDFDict.SDK.Sharp.Web\pdfdict.sdk.sharp.web.client\pdfdict.sdk.sharp.web.client.esproj", "{D5D9E371-5B06-47F0-92E1-C033B16753C9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PDFDict.SDK.Sharp.Desktop", "ui\PDFDict.SDK.Sharp.Desktop\PDFDict.SDK.Sharp.Desktop.csproj", "{34D6EDFF-FAD0-4EAD-9C0F-170E67C92259}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -43,10 +41,6 @@ Global
 		{D5D9E371-5B06-47F0-92E1-C033B16753C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D5D9E371-5B06-47F0-92E1-C033B16753C9}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D5D9E371-5B06-47F0-92E1-C033B16753C9}.Release|Any CPU.Deploy.0 = Release|Any CPU
-		{34D6EDFF-FAD0-4EAD-9C0F-170E67C92259}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{34D6EDFF-FAD0-4EAD-9C0F-170E67C92259}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{34D6EDFF-FAD0-4EAD-9C0F-170E67C92259}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{34D6EDFF-FAD0-4EAD-9C0F-170E67C92259}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

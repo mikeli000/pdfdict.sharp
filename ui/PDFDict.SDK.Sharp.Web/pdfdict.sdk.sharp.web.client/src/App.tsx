@@ -1,7 +1,6 @@
 import React from 'react';
 import { Flex, Layout } from 'antd';
-import FileUploader from './FileUploader';
-import ViewerTabs from './ViewerTabs';
+import HomePage from './HomePage';
 
 const { Header, Footer, Sider, Content } = Layout;
 
@@ -50,9 +49,7 @@ const App: React.FC = () => (
                     
                 </Sider>
                 <Content style={contentStyle}>
-                    {/* <FileUploader /> */}
-                    
-                    <ViewerTabs />
+                    <HomePage />
                 </Content>
             </Layout>
             <Footer style={footerStyle}> </Footer>
