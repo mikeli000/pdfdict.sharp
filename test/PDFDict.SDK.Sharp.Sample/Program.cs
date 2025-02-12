@@ -20,8 +20,8 @@ namespace PDFDict.SDK.Sharp.Sample
             // ExtractImages();
             // ExtractText();
             // OCRImages();
-            OCRPages();
-            // ReadTags();
+            // OCRPages();
+            ReadTags();
             // AddPageAsXObject();
             // FillForm();
             // RenderPDF();
@@ -84,8 +84,9 @@ namespace PDFDict.SDK.Sharp.Sample
 
         private static void ReadTags()
         {
-            string input = Path.Combine(Environment.CurrentDirectory, @"files/pdf/pdfua/FlyerPDFUA-en2015.pdf");
-            PDFTools.GetTags(input);
+            //string input = Path.Combine(Environment.CurrentDirectory, @"files/pdf/pdfua/FlyerPDFUA-en2015.pdf");
+            string input = @"C:\Users\MikeLi\Downloads\Hello.PDF";
+            PDFTools.ReadTags(input);
         }
 
         private static void AddPageAsXObject()
@@ -154,7 +155,8 @@ namespace PDFDict.SDK.Sharp.Sample
 
         private static void RenderPDF(bool grayscale = false)
         {
-            string pdf = Path.Combine(Environment.CurrentDirectory, @"files/pdf/table/tabula/MultiColumn.pdf");
+            //string pdf = Path.Combine(Environment.CurrentDirectory, @"files/pdf/table/tabula/MultiColumn.pdf");
+            string pdf = "C:/Users/MikeLi/Downloads/11068a08-c991-4511-b644-aa7840833616.PDF";
             string outputFolder = Path.Combine(Environment.CurrentDirectory, @"files/pdf/images");
             Console.WriteLine($"{outputFolder}");
             if (grayscale)

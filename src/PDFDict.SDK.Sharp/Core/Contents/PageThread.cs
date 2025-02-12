@@ -26,6 +26,16 @@ namespace PDFDict.SDK.Sharp.Core.Contents
             _contentList.Add(element);
         }
 
+        public Dictionary<int, List<string>> GetMarkedContentDict()
+        {
+            if (_textThread != null)
+            {
+                return _textThread.GetMarkedContentDict();
+            }
+
+            return null;
+        }
+
         public List<PageElement> GetContentList()
         {
             return _contentList;
@@ -46,8 +56,6 @@ namespace PDFDict.SDK.Sharp.Core.Contents
                     textElements.Add((TextElement)_contentList[i]);
                 }
             }
-
-
         }
     }
 
@@ -68,6 +76,29 @@ namespace PDFDict.SDK.Sharp.Core.Contents
         public List<TextElement> GetTextElements()
         {
             return _textElements;
+        }
+
+        public Dictionary<int, List<string>> GetMarkedContentDict()
+        {
+            Dictionary<int, List<string>> markedContentDict = new Dictionary<int, List<string>>();
+            foreach (var ele in _textElements)
+            {
+                var dict = ele.GetMarkedContentDict();
+                if (dict != null)
+                {
+                    foreach (var item in dict)
+                    {
+                        if (markedContentDict.ContainsKey(item.Key))
+                        {
+                            markedContentDict[item.Key].Add(item.Value);
+                            continue;
+                        }
+
+                        markedContentDict.Add(item.Key, new List<string>() { item.Value });
+                    }
+                }
+            }
+            return markedContentDict;
         }
 
         private List<TextElement> SortTextElements()

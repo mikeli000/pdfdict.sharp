@@ -17,6 +17,7 @@ namespace PDFDict.SDK.Sharp.Core.Contents
         
         private GraphicsState _gState;
         private StringBuilder _text;
+        private Dictionary<int, string> _markedContentDict = new Dictionary<int, string>();
 
         public TextElement() : base(ElementType.Text, RectangleF.Empty)
         {
@@ -41,6 +42,11 @@ namespace PDFDict.SDK.Sharp.Core.Contents
         public string GetText()
         {
             return _text.ToString();
+        }
+
+        public Dictionary<int, string> GetMarkedContentDict()
+        {
+            return _markedContentDict;
         }
 
         public bool TryAppendChar(char c, double originX, double originY, RectangleF bbox, GraphicsState gState)
@@ -78,7 +84,7 @@ namespace PDFDict.SDK.Sharp.Core.Contents
             return true;
         }
 
-        public bool TryAppendText(string text, double originX, double originY, RectangleF bbox, GraphicsState gState)
+        public bool TryAppendText(string text, double originX, double originY, RectangleF bbox, GraphicsState gState, int markedContentID = -1)
         {
             if (_text.Length == 0)
             {
@@ -88,6 +94,10 @@ namespace PDFDict.SDK.Sharp.Core.Contents
                 _baselineY = originY;
                 _gState = gState;
 
+                if (markedContentID != -1)
+                {
+                    _markedContentDict[markedContentID] = text;
+                }
                 return true;
             }
 
@@ -109,6 +119,11 @@ namespace PDFDict.SDK.Sharp.Core.Contents
 
             _text.Append(text);
             BBox = RectangleF.Union(BBox, bbox);
+
+            if (markedContentID != -1)
+            {
+                _markedContentDict[markedContentID] = _text.ToString();
+            }
 
             return true;
         }

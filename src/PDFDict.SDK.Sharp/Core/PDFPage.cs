@@ -13,12 +13,20 @@ namespace PDFDict.SDK.Sharp.Core
         private int _pageIndex;
         private Stack<FpdfPageobjectT> _graphicsPathStack = new Stack<FpdfPageobjectT>();
         private DrawingParams _graphicsState;
+        private bool _isTagged;
 
         private PDFPage(PDFDocument pdfDoc, FpdfPageT pagePtr, int pageIndex)
         {
             _pdfDoc = pdfDoc;
             _pagePtr = pagePtr;
             _pageIndex = pageIndex;
+
+            var pdfStructtreeT = fpdf_structtree.FPDF_StructTreeGetForPage(GetHandle());
+            _isTagged = pdfStructtreeT != null;
+            if (pdfStructtreeT != null)
+            {
+                fpdf_structtree.FPDF_StructTreeClose(pdfStructtreeT);
+            }
         }
 
         public static PDFPage Create(PDFDocument pdfDoc, int pageIndex, double width, double height)
@@ -31,6 +39,11 @@ namespace PDFDict.SDK.Sharp.Core
         {
             var pagePtr = fpdfview.FPDF_LoadPage(pdfDoc.GetHandle(), pageIndex);
             return new PDFPage(pdfDoc, pagePtr, pageIndex);
+        }
+
+        public bool IsTagged()
+        {
+            return _isTagged;
         }
 
         public int GetPageIndex()
@@ -203,6 +216,8 @@ namespace PDFDict.SDK.Sharp.Core
                 fpdf_edit.FPDFPageObjGetBounds(textObj, ref left, ref bottom, ref right, ref top);
                 var bbox = new RectangleF(left, bottom, right - left, top - bottom);
 
+                int mid = fpdf_edit.FPDFPageObjGetMarkedContentID(textObj);
+
                 float fontSize = 0;
                 if (fpdf_edit.FPDFTextObjGetFontSize(textObj, ref fontSize) > 0)
                 {
@@ -278,11 +293,11 @@ namespace PDFDict.SDK.Sharp.Core
                     }
                 }
 
-                bool appended = textElement.TryAppendText(textRun, x, y, bbox, gState);
+                bool appended = textElement.TryAppendText(textRun, x, y, bbox, gState, mid);
                 if (!appended)
                 {
                     textElement = new TextElement();
-                    textElement.TryAppendText(textRun, x, y, bbox, gState);
+                    textElement.TryAppendText(textRun, x, y, bbox, gState, mid);
                     pageThread.AddPageElement(textElement);
                 }
 

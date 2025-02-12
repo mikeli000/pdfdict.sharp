@@ -11,11 +11,17 @@ namespace PDFDict.SDK.Sharp.Core
     {
         private PDFPage _pdfPage;
         private FpdfStructtreeT _pdfStructtreeT;
+        private Dictionary<int, List<string>> _pageMarkedContentDict;
 
         public PDFStructTree(PDFPage page)
         {
             _pdfPage = page;
             _pdfStructtreeT = fpdf_structtree.FPDF_StructTreeGetForPage(_pdfPage.GetHandle());
+
+            if (_pdfStructtreeT != null)
+            {
+                _pageMarkedContentDict = page.BuildPageThread().GetMarkedContentDict();
+            }
         }
 
         public int GetChildCount()
@@ -26,7 +32,7 @@ namespace PDFDict.SDK.Sharp.Core
         public PDFStructElement GetChild(int index)
         {
             FpdfStructelementT structElementT = fpdf_structtree.FPDF_StructTreeGetChildAtIndex(_pdfStructtreeT, index);
-            return new PDFStructElement(structElementT);
+            return new PDFStructElement(structElementT, _pageMarkedContentDict);
         }
 
         public void Dispose()
@@ -38,32 +44,36 @@ namespace PDFDict.SDK.Sharp.Core
         }
     }
 
-    public class PDFStructElement : IDisposable
+    public class PDFStructElement
     {
         public int ChildCount { get; private set; }
         public string AltText { get; private set; }
         public string ActualText { get; private set; }
-        public int MarkedContentID { get; private set; }
-        public string Role { get; private set; }
+        public string Lang { get; private set; }
+        public int[] MarkedContentIDs { get; private set; }
+        public string Type { get; private set; }
         public string StructTag { get; private set; }
         public string Title { get; private set; }
 
         private IDictionary<string, string> Attrs = new Dictionary<string, string>();
 
         private FpdfStructelementT _fpdfStructelementT;
+        private Dictionary<int, List<string>> _pageMarkedContentDict;
 
-        public PDFStructElement(FpdfStructelementT structElementT)
+        public PDFStructElement(FpdfStructelementT structElementT, Dictionary<int, List<string>> pageMarkedContentDict)
         {
             _fpdfStructelementT = structElementT;
+            _pageMarkedContentDict = pageMarkedContentDict;
             ReadChildCount();
             ReadAltText();
-            ReadActualText();
+            ReadActualText(); // no return value
+
             ReadMarkedContentID();
-            ReadRole();
+            ReadType();
             ReadStructTag();
             ReadTitle();
-            
-            ReadAttrs();
+            ReadLang();
+            //ReadAttrs();
         }
 
         public void ReadAttrs()
@@ -101,10 +111,11 @@ namespace PDFDict.SDK.Sharp.Core
             return "child count: " + ChildCount +
                 " | alt text: " + AltText +
                 " | actual text: " + ActualText +
-                " | marked content id: " + MarkedContentID +
+                " | lang: " + Lang +
+                //" | marked content id: " + MarkedContentIDs != null ? string.Join(",", MarkedContentIDs) : "" +
                 " | tag: " + StructTag +
                 " | title: " + Title +
-                " | role: " + Role;
+                " | type: " + Type;
         }
 
         private void ReadChildCount()
@@ -115,7 +126,7 @@ namespace PDFDict.SDK.Sharp.Core
         public PDFStructElement GetChild(int i)
         {
             FpdfStructelementT structElementT = fpdf_structtree.FPDF_StructElementGetChildAtIndex(_fpdfStructelementT, i);
-            return new PDFStructElement(structElementT);
+            return new PDFStructElement(structElementT, _pageMarkedContentDict);
         }
 
         private void ReadAltText()
@@ -144,7 +155,20 @@ namespace PDFDict.SDK.Sharp.Core
             }
         }
 
-        private void ReadRole()
+        private void ReadLang()
+        {
+            unsafe
+            {
+                Func<IntPtr, int, int> nativeFunc = (buf, maxByteCount) =>
+                {
+                    var len = fpdf_structtree.FPDF_StructElementGetLang(_fpdfStructelementT, buf, (uint)maxByteCount);
+                    return (int)len;
+                };
+                Lang = NativeStringReader.UnsafeRead_UTF16_LE(nativeFunc);
+            }
+        }
+
+        private void ReadType()
         {
             unsafe
             {
@@ -153,7 +177,7 @@ namespace PDFDict.SDK.Sharp.Core
                     var len = fpdf_structtree.FPDF_StructElementGetType(_fpdfStructelementT, buf, (uint)maxByteCount);
                     return (int)len;
                 };
-                Role = NativeStringReader.UnsafeRead_UTF16_LE(nativeFunc);
+                Type = NativeStringReader.UnsafeRead_UTF16_LE(nativeFunc);
             }
         }
 
@@ -176,11 +200,30 @@ namespace PDFDict.SDK.Sharp.Core
 
         private void ReadMarkedContentID()
         {
-            MarkedContentID =  fpdf_structtree.FPDF_StructElementGetMarkedContentID(_fpdfStructelementT);
-        }
+            int n = fpdf_structtree.FPDF_StructElementGetMarkedContentIdCount(_fpdfStructelementT);
+            if (n <= 0)
+            {
+                return;
+            }
 
-        public void Dispose()
-        {
+            var markedContentKids = new List<int>();
+            for (int i = 0; i < n; i++)
+            {
+                int markedContentID = fpdf_structtree.FPDF_StructElementGetChildMarkedContentID(_fpdfStructelementT, i);
+                if (markedContentID != -1)
+                {
+                    markedContentKids.Add(markedContentID);
+                }
+            }
+            MarkedContentIDs = markedContentKids.ToArray();
+
+            foreach (var mid in MarkedContentIDs)
+            {
+                if (_pageMarkedContentDict.ContainsKey(mid))
+                {
+                    ActualText += string.Join("", _pageMarkedContentDict[mid]);
+                }
+            }
         }
     }
 }

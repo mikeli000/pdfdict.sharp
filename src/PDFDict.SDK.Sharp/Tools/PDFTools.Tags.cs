@@ -1,4 +1,5 @@
 ﻿using PDFDict.SDK.Sharp.Core;
+using PDFDict.SDK.Sharp.Core.Contents;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +10,7 @@ namespace PDFDict.SDK.Sharp.Tools
 {
     public partial class PDFTools
     {
-        public static void GetTags(string pdfFile)
+        public static void ReadTags(string pdfFile)
         {
             if (!File.Exists(pdfFile))
             {
@@ -23,6 +24,13 @@ namespace PDFDict.SDK.Sharp.Tools
                 for (int i = 0; i < pageCount; i++)
                 {
                     var page = pdfDoc.LoadPage(i);
+
+                    if (!page.IsTagged())
+                    {
+                        Console.WriteLine("Page is not tagged");
+                        return;
+                    }
+
                     var structTree = new PDFStructTree(page);
                     int count = structTree.GetChildCount();
                     for (int j = 0; j < count; j++)
@@ -40,7 +48,7 @@ namespace PDFDict.SDK.Sharp.Tools
             {
                 return;
             }
-            
+
             if (structElement.ChildCount == 0)
             {
                 Console.WriteLine(structElement);
