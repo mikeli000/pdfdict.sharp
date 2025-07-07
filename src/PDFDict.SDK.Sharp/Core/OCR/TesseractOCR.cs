@@ -64,7 +64,7 @@ namespace PDFDict.SDK.Sharp.Core.OCR
 
             using var engine = new TesseractEngine(tessDataPath, Lang_ChineseSimple, EngineMode.Default);
             using var img = Pix.LoadFromFile(imagePath);
-
+            
             using var page = engine.Process(img);
 
             var wordResultList = new List<OCRWordResult>();

@@ -7,14 +7,14 @@ using System.Threading.Tasks;
 
 namespace PDFDict.SDK.Sharp.Core.Contents
 {
-    public class TextElement: PageElement
+    public class TextElement : PageElement
     {
-        private double _deltaBaseline = 0.01;
+        private double _deltaBaseline = 0.1;
         private double _deltaDistanceRatio = 1.5;
 
         private double _baselineX = double.MinValue;
         private double _baselineY = double.MinValue;
-        
+
         private GraphicsState _gState;
         private StringBuilder _text;
         private Dictionary<int, string> _markedContentDict = new Dictionary<int, string>();
@@ -144,7 +144,7 @@ namespace PDFDict.SDK.Sharp.Core.Contents
                     return true;
                 }
             }
-            
+
             return false;
         }
 
@@ -175,6 +175,155 @@ namespace PDFDict.SDK.Sharp.Core.Contents
         public override string ToString()
         {
             return $"Text: {GetText()}, BBox: {BBox}";
+        }
+
+        public static bool IsSpaceBetween(TextElement t1, TextElement t2)
+        {
+            if (t1 == null || t2 == null || t1.GetText().Length == 0 || t2.GetText().Length == 0)
+            {
+                return false;
+            }
+
+            if (Math.Abs(t1.GetBaselineY() - t2.GetBaselineY()) > t1._deltaBaseline)
+            {
+                return false;
+            }
+
+            double distance = Math.Abs(t1.GetBaselineX() + t1.BBox.Width - t2.GetBaselineX());
+            double avgCharWidth = t1.AverageCharWidth() / 2;
+            if (distance > avgCharWidth * t1._deltaDistanceRatio)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public static char[] ListBullets =  {
+                '•', '‣', '∙', '●',
+                '▪', '▫', '■', '□', '▣',
+                '▤', '▥', '▦', '▧', '▨', '▩',
+                '→', '⇒', '➤', '▶', '➔', '➢',
+                '♦', '◆', '◇', '○',
+                '✓', '✔',
+                '✦', '★', '✧', '❖', '❑'
+            };
+
+        public static string[] ListItemBeginTag = {
+                "i.", "ii.", "iii.", "iv.", "v.", "vi.", "vii.", "viii.", "ix.", "x.",
+                "1.", "2.", "3.", "4.", "5.", "6.", "7.", "8.", "9.", "10.",
+                "1)", "2)", "3)", "4)", "5)", "6)", "7)", "8)", "9)", "10)",
+                "1-", "2-", "3-", "4-", "5-",
+                "a.", "b.", "c.", "d.", "e.",
+                "A.", "B.", "C.", "D.", "E.",
+                "a)", "b)", "c)", "d)", "e)",
+                "A)", "B)", "C)", "D)", "E)",
+            };
+
+        public static bool IsListParagraphBegin(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return false;
+            }
+            text = text.Trim();
+            char c = text[0];
+
+            if (ListBullets.Contains(c))
+            {
+                return true;
+            }
+
+            foreach (var tag in ListItemBeginTag)
+            {
+                if (text.StartsWith(tag))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public bool IsWingdingFont()
+        {
+            var fontName = _gState?.TextState?.FontFamilyName;
+            if (fontName != null && fontName.ToLower().Contains("wingding"))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public override bool TryBuildHTMLPiece(out string html)
+        {
+            html = null;
+
+            if (GetGState() != null)
+            {
+                string css = GraphicsStateToCssConverter.Convert(GetGState());
+                if (string.IsNullOrWhiteSpace(css))
+                {
+                    return false;
+                }
+
+                html = $"<span style=\"{css}\">{GetText()}</span>";
+                return true;
+            }
+
+            return false;
+        }
+
+        public static class GraphicsStateToCssConverter
+        {
+            public static string Convert(GraphicsState g)
+            {
+                if (g == null || g.TextState == null)
+                {
+                    return string.Empty;
+                }
+
+                var sb = new StringBuilder();
+                if (g.NonStrokingColor != null)
+                {
+                    var color = ConvertColor(g.NonStrokingColor);
+                    if (color != null)
+                    {
+                        sb.Append($"color: {color};");
+                    }
+                }
+
+                //if (g.TextState.FontSize > 0)
+                //{
+                //    sb.Append($"font-size: {g.TextState.FontSize}pt;");
+                //}
+
+                //if (g.TextState.FontWeight >= 600)
+                //{
+                //    sb.Append("font-weight: bold;");
+                //}
+
+                //if (Math.Abs(g.TextState.FontItalicAngle) > 0.1)
+                //{
+                //    sb.Append("font-style: italic;");
+                //}
+
+                return sb.ToString();
+            }
+
+            private static string ConvertColor(ColorState color)
+            {
+                if (color?.Components != null && color?.Components.Length == 4)
+                {
+                    int r = (int)color.Components[0];
+                    int g = (int)color.Components[1];
+                    int b = (int)color.Components[2];
+                    return $"rgb({r},{g},{b})";
+                }
+
+                return null;
+            }
         }
     }
 }

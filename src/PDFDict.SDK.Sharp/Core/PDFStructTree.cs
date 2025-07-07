@@ -68,7 +68,6 @@ namespace PDFDict.SDK.Sharp.Core
             ReadAltText();
             ReadActualText(); // no return value
 
-            ReadMarkedContentID();
             ReadType();
             ReadStructTag();
             ReadTitle();
@@ -108,11 +107,17 @@ namespace PDFDict.SDK.Sharp.Core
 
         public override string ToString()
         {
-            return "child count: " + ChildCount +
+            string mids = "";
+            if (MarkedContentIDs != null && MarkedContentIDs.Length > 0)
+            {
+                mids = string.Join(",", MarkedContentIDs);
+            }
+            
+            return $"child count: " + ChildCount +
                 " | alt text: " + AltText +
                 " | actual text: " + ActualText +
                 " | lang: " + Lang +
-                //" | marked content id: " + MarkedContentIDs != null ? string.Join(",", MarkedContentIDs) : "" +
+                " | marked content id: " + mids +
                 " | tag: " + StructTag +
                 " | title: " + Title +
                 " | type: " + Type;
@@ -152,6 +157,11 @@ namespace PDFDict.SDK.Sharp.Core
                     return (int)len;
                 };
                 ActualText = NativeStringReader.UnsafeRead_UTF16_LE(nativeFunc);
+            }
+
+            if (string.IsNullOrEmpty(ActualText))
+            {
+                ReadMarkedContentID();
             }
         }
 

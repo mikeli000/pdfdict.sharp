@@ -142,6 +142,17 @@ namespace PDFDict.SDK.Sharp.Core
                 }
                 else if (type == FPDF_PAGEOBJ_TYPE.FPDF_PAGEOBJ_IMAGE)
                 {
+                    var bitmap = fpdf_edit.FPDFImageObjGetRenderedBitmap(_pdfDoc.GetHandle(), _pagePtr, obj);
+                    if (bitmap == null)
+                    {
+                        continue;
+                    }
+                    float left = 0, right = 0, bottom = 0, top = 0;
+                    fpdf_edit.FPDFPageObjGetBounds(obj, ref left, ref bottom, ref right, ref top);
+                    var bbox = new RectangleF(left, bottom, right - left, top - bottom);
+                    PDFImage pdfImage = PDFImage.From(bitmap);
+                    var imageElement = new ImageElement(pdfImage, bbox);
+                    pageThread.AddPageElement(imageElement);
                 }
                 else if (type == FPDF_PAGEOBJ_TYPE.FPDF_PAGEOBJ_PATH)
                 {
@@ -254,6 +265,16 @@ namespace PDFDict.SDK.Sharp.Core
                             return (int)len;
                         };
                         textState.FontFamilyName = NativeStringReader.UnsafeRead_UTF8(nativeFunc);
+
+                        if (string.IsNullOrWhiteSpace(textState.FontFamilyName) || textState.FontFamilyName == "\0")
+                        {
+                            Func<IntPtr, int, int> nativeFunc2 = (buf, maxByteCount) =>
+                            {
+                                var len = fpdf_edit.FPDFFontGetBaseFontName(fontObj, (sbyte*)buf, (ulong)maxByteCount);
+                                return (int)len;
+                            };
+                            textState.FontFamilyName = NativeStringReader.UnsafeRead_UTF8(nativeFunc2);
+                        }
                     }
                 }
 
@@ -274,25 +295,6 @@ namespace PDFDict.SDK.Sharp.Core
 
                 double x = 0, y = 0;
                 fpdf_text.FPDFTextGetCharOrigin(pageTextPtr, i, ref x, ref y);
-                RectangleF bbox1 = RectangleF.Empty;
-                for (int j = 0; j < textRun.Length; j++)
-                {
-                    //double left = 0, right = 0, bottom = 0, top = 0;
-                    //ret = fpdf_text.FPDFTextGetCharBox(pageTextPtr, i + j, ref left, ref right, ref bottom, ref top);
-                    if (ret > 0)
-                    {
-                        var charBox = new RectangleF((float)left, (float)bottom, (float)(right - left), (float)(top - bottom));
-                        if (bbox1.IsEmpty)
-                        {
-                            bbox1 = charBox;
-                        }
-                        else
-                        {
-                            bbox1 = RectangleF.Union(bbox1, charBox);
-                        }
-                    }
-                }
-
                 bool appended = textElement.TryAppendText(textRun, x, y, bbox, gState, mid);
                 if (!appended)
                 {

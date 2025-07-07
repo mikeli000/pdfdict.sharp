@@ -9,9 +9,6 @@ namespace PDFDict.SDK.Sharp.Sample
         static void Main(string[] args)
         {
             Console.WriteLine("Run sample:");
-            byte src = 3;
-            byte dst = (byte)~src;
-            Console.WriteLine(dst);
 
             PDFSharpLib.Initialize();
 
@@ -20,11 +17,10 @@ namespace PDFDict.SDK.Sharp.Sample
             // ExtractImages();
             // ExtractText();
             // OCRImages();
-            // OCRPages();
-            ReadTags();
+            // ReadTags();
             // AddPageAsXObject();
             // FillForm();
-            // RenderPDF();
+            RenderPDF();
             // ReadAnnots();
             // AddQRCode();
 

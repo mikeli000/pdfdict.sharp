@@ -12,5 +12,11 @@ namespace PDFDict.SDK.Sharp.Core.Contents
         public GraphicsElement(RectangleF bbox, GraphicsState gState) : base(ElementType.Graphics, bbox)
         {
         }
+
+        public override bool TryBuildHTMLPiece(out string html)
+        {
+            html = null;
+            return false;
+        }
     }
 }
