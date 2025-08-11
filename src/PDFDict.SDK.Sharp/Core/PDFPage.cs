@@ -127,6 +127,24 @@ namespace PDFDict.SDK.Sharp.Core
             return pageTextChunks;
         }
 
+        public string GetRectText(double left, double top, double right, double bottom)
+        {
+            string chars = string.Empty;
+            
+            var pageTextPtr = fpdf_text.FPDFTextLoadPage(_pagePtr);
+            unsafe
+            {
+                Func<IntPtr, int, int> nativeFunc = (buf, count) =>
+                {
+                    var len = fpdf_text.FPDFTextGetBoundedText(pageTextPtr, left, top, right, bottom, ref ((ushort*)buf)[0], count);
+                    return len;
+                };
+                chars = NativeStringReader.UnsafeRead_UTF16_LE_Char(nativeFunc);
+            }
+
+            return chars;
+        }
+
         public PageThread BuildPageThread()
         {
             var pageThread = new PageThread();
@@ -181,11 +199,15 @@ namespace PDFDict.SDK.Sharp.Core
                 chars = NativeStringReader.UnsafeRead_UTF16_LE_2(nativeFunc, charCount + 1); // /0 terminated
             }
 
-            int cc = 0;
             var textElement = new TextElement();
             pageThread.AddPageElement(textElement);
             for (int i = 0; i < charCount;)
             {
+                if (i >= chars.Length)
+                {
+                    break;
+                }
+
                 char c = chars[i];
                 if (c == '\0' || c == '\r' || c == '\n')
                 {
@@ -294,17 +316,124 @@ namespace PDFDict.SDK.Sharp.Core
                 textState.RenderingMode = (int)renderMode;
 
                 double x = 0, y = 0;
+                
                 fpdf_text.FPDFTextGetCharOrigin(pageTextPtr, i, ref x, ref y);
-                bool appended = textElement.TryAppendText(textRun, x, y, bbox, gState, mid);
-                if (!appended)
+                var wordBlocks = ResolveWordBlock(pageTextPtr, textRun, i, bbox, textState.SpaceWidth);
+                foreach (var block in wordBlocks)
                 {
-                    textElement = new TextElement();
-                    textElement.TryAppendText(textRun, x, y, bbox, gState, mid);
-                    pageThread.AddPageElement(textElement);
+                    bool appended = textElement.TryAppendText(block.Word, block.X, block.Y, block.BBox, gState, mid);
+                    if (!appended)
+                    {
+                        textElement = new TextElement();
+                        textElement.TryAppendText(block.Word, block.X, block.Y, block.BBox, gState, mid);
+                        pageThread.AddPageElement(textElement);
+                    }
                 }
+
+                //bool appended = textElement.TryAppendText(textRun, x, y, bbox, gState, mid);
+                //if (!appended)
+                //{
+                //    textElement = new TextElement();
+                //    textElement.TryAppendText(textRun, x, y, bbox, gState, mid);
+                //    pageThread.AddPageElement(textElement);
+                //}
 
                 i += textRun.Length;
             }
+        }
+
+        public class WordBlock
+        {
+            public string Word { get; set; }
+            public RectangleF BBox { get; set; }
+            public double X { get; set; }
+            public double Y { get; set; }
+        }
+
+        private List<WordBlock> ResolveWordBlock(FpdfTextpageT pageTextPtr, string textRun, int i, RectangleF bbox, double spaceW)
+        {
+            var workBlocks = new List<WordBlock>();
+            double tw = bbox.Width;
+            if (spaceW <= 1)
+            {
+                spaceW = tw / textRun.Length;
+            }
+
+            double x0 = 0, y0 = 0;
+            double x = 0, y = 0;
+            double lastX = 0, lastY = 0, lastR = 0;
+            double left = 0, right = 0, bottom = 0, top = 0;
+
+            List<(int, double, double)> sep = new List<(int, double, double)>();
+
+            List<(char, double[], double[])> posBoxes = new List<(char, double[], double[])>();
+            for (int j = 0; j < textRun.Length; j++)
+            {
+                fpdf_text.FPDFTextGetCharBox(pageTextPtr, i + j, ref left, ref right, ref bottom, ref top);
+                fpdf_text.FPDFTextGetCharOrigin(pageTextPtr, i + j, ref x, ref y);
+
+                posBoxes.Add((textRun[j], new double[] { x, y }, new double[] { left, right, bottom, top }));
+            }
+            posBoxes = posBoxes.OrderBy(item => item.Item2[0]).ToList();
+
+            for (int j = 0; j < posBoxes.Count; j++)
+            {
+                if (j == 0)
+                {
+                    x0 = posBoxes[j].Item2[0];
+                    y0 = posBoxes[j].Item2[1];
+                    sep.Add((0, x0, y0));
+                }
+                else
+                {
+                    if (posBoxes[j].Item2[0] - lastX > 2 * spaceW)
+                    {
+                        sep.Add((j - 1, lastR, lastY));
+                        sep.Add((j, posBoxes[j].Item2[0], posBoxes[j].Item2[1]));
+                    }
+                }
+
+                lastX = posBoxes[j].Item2[0];
+                lastR = posBoxes[j].Item3[1];
+                lastY = posBoxes[j].Item2[1];
+            }
+
+            sep.Add((textRun.Length - 1, bbox.Right, bbox.Bottom));
+
+            if (sep.Count <= 2)
+            {
+                workBlocks.Add(new WordBlock 
+                { 
+                    Word = textRun,
+                    BBox = bbox,
+                    X = bbox.Left,
+                    Y = bbox.Top
+                });
+                return workBlocks;
+            }
+
+            for (int j = 0; j < sep.Count - 1; j++)
+            {
+                var (startIndex, startX, startY) = sep[j];
+                var (endIndex, endX, endY) = sep[j + 1];
+
+                string word = textRun.Substring(startIndex, endIndex - startIndex + 1);
+                double wordWidth = endX - startX;
+                double wordHeight = bbox.Height;
+
+                RectangleF wordBox = new RectangleF((float)startX, (float)startY, (float)wordWidth, (float)wordHeight);
+                workBlocks.Add(new WordBlock
+                {
+                    Word = word,
+                    BBox = wordBox,
+                    X = startX,
+                    Y = startY
+                });
+
+                j++;
+            }
+
+            return workBlocks;
         }
 
         public bool Flatten()

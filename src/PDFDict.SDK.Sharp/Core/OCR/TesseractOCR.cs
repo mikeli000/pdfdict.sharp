@@ -91,6 +91,44 @@ namespace PDFDict.SDK.Sharp.Core.OCR
             return wordResultList;
         }
 
+        public static List<OCRWordResult> OCRBlockLevel(string imagePath, string lang = "eng")
+        {
+            string tessDataPath = ConfigTesseractDataPath();
+
+            if (!Directory.Exists(tessDataPath))
+            {
+                throw new DirectoryNotFoundException($"Tesseract data path {tessDataPath} not found");
+            }
+
+            using var engine = new TesseractEngine(tessDataPath, Lang_ChineseSimple, EngineMode.Default);
+            using var img = Pix.LoadFromFile(imagePath);
+
+            using var page = engine.Process(img);
+
+            var wordResultList = new List<OCRWordResult>();
+            PageIteratorLevel level = PageIteratorLevel.Word;
+            using (var iter = page.GetIterator())
+            {
+                do
+                {
+                    if (iter.TryGetBoundingBox(level, out var rect))
+                    {
+                        var wordResult = new OCRWordResult
+                        {
+                            Text = iter.GetText(level),
+                            BBox = new RectangleF(rect.X1, rect.Y1, rect.Width, rect.Height),
+                            Confidence = iter.GetConfidence(level),
+                            Lang = iter.GetWordRecognitionLanguage()
+                        };
+                        wordResultList.Add(wordResult);
+                    }
+                }
+                while (iter.Next(level));
+            }
+
+            return wordResultList;
+        }
+
         public class OCRResult
         {
             public string Text { get; set; }

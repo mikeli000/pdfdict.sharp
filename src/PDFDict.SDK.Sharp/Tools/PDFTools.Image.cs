@@ -1,4 +1,5 @@
-﻿using PDFDict.SDK.Sharp.Core;
+﻿using OpenCvSharp;
+using PDFDict.SDK.Sharp.Core;
 using PDFDict.SDK.Sharp.Core.OCR;
 using System;
 using System.Collections.Generic;

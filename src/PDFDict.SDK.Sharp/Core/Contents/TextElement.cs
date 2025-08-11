@@ -220,9 +220,10 @@ namespace PDFDict.SDK.Sharp.Core.Contents
                 "A)", "B)", "C)", "D)", "E)",
             };
 
-        public static bool IsListParagraphBegin(string text)
+        public static bool IsListParagraphBegin(string text, out string bullet)
         {
-            if (string.IsNullOrEmpty(text))
+            bullet = string.Empty;
+            if (string.IsNullOrEmpty(text.Trim()))
             {
                 return false;
             }
@@ -231,14 +232,40 @@ namespace PDFDict.SDK.Sharp.Core.Contents
 
             if (ListBullets.Contains(c))
             {
-                return true;
+                if (text.Length == 1)
+                {
+                    bullet = c + "";
+                    return true;
+                }
+                else if (text.Length > 1 && Char.IsWhiteSpace(text[1]))
+                {
+                    bullet = c + " ";
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
             }
 
             foreach (var tag in ListItemBeginTag)
             {
                 if (text.StartsWith(tag))
                 {
-                    return true;
+                    if (text.Length == tag.Length)
+                    {
+                        bullet = tag;
+                        return true;
+                    }
+                    else if (text.Length > tag.Length && Char.IsWhiteSpace(text[tag.Length]))
+                    {
+                        bullet = tag + " ";
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
                 }
             }
 
