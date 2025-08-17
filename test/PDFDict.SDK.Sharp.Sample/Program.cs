@@ -151,8 +151,7 @@ namespace PDFDict.SDK.Sharp.Sample
 
         private static void RenderPDF(bool grayscale = false)
         {
-            //string pdf = Path.Combine(Environment.CurrentDirectory, @"files/pdf/table/tabula/MultiColumn.pdf");
-            string pdf = "C:/Users/MikeLi/Downloads/11068a08-c991-4511-b644-aa7840833616.PDF";
+            string pdf = Path.Combine(Environment.CurrentDirectory, @"files/pdf/table/tabula/MultiColumn.pdf");
             string outputFolder = Path.Combine(Environment.CurrentDirectory, @"files/pdf/images");
             Console.WriteLine($"{outputFolder}");
             if (grayscale)

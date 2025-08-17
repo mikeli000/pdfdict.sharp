@@ -19,19 +19,19 @@
   </ItemGroup>
 	
     <ItemGroup>
-		<PackageReference Include="OpenCvSharp4" Version="4.10.0.20241108" />
-		<PackageReference Include="OpenCvSharp4.runtime.win" Version="4.10.0.20241108" />
+		<PackageReference Include="OpenCvSharp4" Version="4.11.0.20250507" />
+		<PackageReference Include="OpenCvSharp4.runtime.win" Version="4.11.0.20250507" />
 	    <PackageReference Include="QRCoder" Version="1.6.0" />
-	    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.5" />
+	    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.11" />
 	    <!--<PackageReference Include="System.Drawing.Common" Version="8.0.2" />-->
-	    <PackageReference Include="Teronis.MSBuild.Packaging.ProjectBuildInPackage" Version="1.0.0">
+	    <PackageReference Include="Teronis.MSBuild.Packaging.ProjectBuildInPackage" Version="1.0.2">
 	      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 	      <PrivateAssets>all</PrivateAssets>
 	    </PackageReference>
 
-		<PackageReference Include="bblanchon.PDFium.Linux" Version="133.0.6844" />
-		<PackageReference Include="bblanchon.PDFium.macOS" Version="133.0.6844" />
-		<PackageReference Include="bblanchon.PDFium.Win32" Version="133.0.6844" />
+		<PackageReference Include="bblanchon.PDFium.Linux" Version="$(Version)" PrivateAssets="analyzers" />
+		<PackageReference Include="bblanchon.PDFium.macOS" Version="$(Version)" PrivateAssets="analyzers" />
+		<PackageReference Include="bblanchon.PDFium.Win32" Version="$(Version)" PrivateAssets="analyzers" />
 		<PackageReference Include="Tesseract" Version="5.2.0" />
 		<PackageReference Include="Tesseract.Drawing" Version="5.2.0" />
     </ItemGroup>

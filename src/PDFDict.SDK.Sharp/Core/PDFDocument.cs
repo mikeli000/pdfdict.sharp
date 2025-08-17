@@ -213,6 +213,40 @@ namespace PDFDict.SDK.Sharp.Core
             return null;
         }
 
+        public void RenderPage(string path, PDFPage pdfPage, float resolution = 96, Color? backgroundColor = null, int renderFlag = 0)
+        {
+            double pageWidth = pdfPage.GetPageWidth();
+            double pageHeight = pdfPage.GetPageHeight();
+            float scale = resolution / 72.0f;
+
+            var imageRect = new Rectangle(0, 0, (int)(pageWidth * scale), (int)(pageHeight * scale));
+            var bitmap = fpdfview.FPDFBitmapCreateEx(imageRect.Width, imageRect.Height, PDFBitmapFormat.FPDFBitmap_BGRA, IntPtr.Zero, 0);
+            if (bitmap == null)
+            {
+                throw new Exception("Failed to create bitmap for page rendering");
+            }
+
+            backgroundColor = backgroundColor ?? Color.White;
+            fpdfview.FPDFBitmapFillRect(bitmap, 0, 0, imageRect.Width, imageRect.Height, (uint)backgroundColor.Value.ToArgb());
+            using var matrix = new FS_MATRIX_();
+            matrix.A = scale;
+            matrix.B = 0;
+            matrix.C = 0;
+            matrix.D = scale;
+            matrix.E = -imageRect.X;
+            matrix.F = -imageRect.Y;
+            using var clipping = new FS_RECTF_();
+            clipping.Top = imageRect.Height;
+            clipping.Left = 0;
+            clipping.Right = imageRect.Width;
+            clipping.Bottom = 0;
+
+            fpdfview.FPDF_RenderPageBitmapWithMatrix(bitmap, pdfPage.GetHandle(), matrix, clipping, renderFlag);
+
+            var pageImage = PDFImage.From(bitmap);
+            pageImage.Save(path);
+        }
+
         public void RenderPage(string path, int pageIndex, float resolution = 96, Color? backgroundColor = null, int renderFlag = 0)
         {
             var pdfPage = LoadPage(pageIndex);

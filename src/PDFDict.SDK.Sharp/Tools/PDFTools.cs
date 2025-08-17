@@ -92,6 +92,33 @@ namespace PDFDict.SDK.Sharp.Tools
             }
         }
 
+        public static void RenderGraphicsOnly(string pdfFile, string outputFolder, float resolution = 96f, Color? backgroundColor = null, int renderFlag = 0)
+        {
+            if (!File.Exists(pdfFile))
+            {
+                throw new FileNotFoundException("PDF file not found", pdfFile);
+            }
+
+            if (!Directory.Exists(outputFolder))
+            {
+                Directory.CreateDirectory(outputFolder);
+            }
+
+            using (PDFDocument pdfDoc = PDFDocument.Load(pdfFile))
+            {
+                int pageCount = pdfDoc.GetPageCount();
+
+                for (int i = 0; i < pageCount; i++)
+                {
+                    var pdfPage = pdfDoc.LoadPage(i);
+                    pdfPage.KeepPathObly();
+
+                    string pageImagePath = Path.Combine(outputFolder, $"page-{i + 1}.png");
+                    pdfDoc.RenderPage(pageImagePath, pdfPage, resolution, backgroundColor, renderFlag);
+                }
+            }
+        }
+
         public static void RenderAsGray(string pdfFile, string outputFolder, float resolution = 96f)
         {
             Render(pdfFile, outputFolder, resolution, null, RenderFlag.FPDF_GRAYSCALE);

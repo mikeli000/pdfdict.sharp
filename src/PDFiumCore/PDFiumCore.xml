@@ -254,6 +254,7 @@
             <para>Return value:</para>
             <para>Page width (excluding non-displayable area) measured in points.</para>
             <para>One point is 1/72 inch (around 0.3528 mm).</para>
+            <para>Comments: Changing the rotation of |page| affects the return value.</para>
             </summary>
         </member>
         <member name="M:PDFiumCore.fpdfview.FPDF_GetPageWidth(PDFiumCore.FpdfPageT)">
@@ -268,6 +269,7 @@
             <para>Note:</para>
             <para>Prefer FPDF_GetPageWidthF() above. This will be deprecated in the</para>
             <para>future.</para>
+            <para>Comments: Changing the rotation of |page| affects the return value.</para>
             </summary>
         </member>
         <member name="M:PDFiumCore.fpdfview.FPDF_GetPageHeightF(PDFiumCore.FpdfPageT)">
@@ -279,6 +281,7 @@
             <para>Return value:</para>
             <para>Page height (excluding non-displayable area) measured in points.</para>
             <para>One point is 1/72 inch (around 0.3528 mm)</para>
+            <para>Comments: Changing the rotation of |page| affects the return value.</para>
             </summary>
         </member>
         <member name="M:PDFiumCore.fpdfview.FPDF_GetPageHeight(PDFiumCore.FpdfPageT)">
@@ -293,6 +296,7 @@
             <para>Note:</para>
             <para>Prefer FPDF_GetPageHeightF() above. This will be deprecated in the</para>
             <para>future.</para>
+            <para>Comments: Changing the rotation of |page| affects the return value.</para>
             </summary>
         </member>
         <member name="M:PDFiumCore.fpdfview.FPDF_GetPageBoundingBox(PDFiumCore.FpdfPageT,PDFiumCore.FS_RECTF_)">
@@ -897,7 +901,7 @@
             <para>Experimental API.</para>
             <para>Set the color of an annotation. Fails when called on annotations with</para>
             <para>appearance streams already defined; instead use</para>
-            <para>FPDFPath_Set{Stroke|Fill}Color().</para>
+            <para>FPDFPageObj_Set{Stroke|Fill}Color().</para>
             <para>annot    - handle to an annotation.</para>
             <para>type     - type of the color to be set.</para>
             <para>R, G, B  - buffer to hold the RGB value of the color. Ranges from 0 to 255.</para>
@@ -911,7 +915,7 @@
             <para>Get the color of an annotation. If no color is specified, default to yellow</para>
             <para>for highlight annotation, black for all else. Fails when called on</para>
             <para>annotations with appearance streams already defined; instead use</para>
-            <para>FPDFPath_Get{Stroke|Fill}Color().</para>
+            <para>FPDFPageObj_Get{Stroke|Fill}Color().</para>
             <para>annot    - handle to an annotation.</para>
             <para>type     - type of the color requested.</para>
             <para>R, G, B  - buffer to hold the RGB value of the color. Ranges from 0 to 255.</para>
@@ -1223,6 +1227,17 @@
             <para>Returns the annotation flags specific to interactive forms.</para>
             </summary>
         </member>
+        <member name="M:PDFiumCore.fpdf_annot.FPDFAnnotSetFormFieldFlags(PDFiumCore.FpdfFormHandleT,PDFiumCore.FpdfAnnotationT,System.Int32)">
+            <summary>
+            <para>Experimental API.</para>
+            <para>Sets the form field flags for an interactive form annotation.</para>
+            <para>handle       -   the handle to the form fill module, returned by</para>
+            <para>FPDFDOC_InitFormFillEnvironment().</para>
+            <para>annot        -   handle to an interactive form annotation.</para>
+            <para>flags        -   the form field flags to be set.</para>
+            <para>Returns true if successful.</para>
+            </summary>
+        </member>
         <member name="M:PDFiumCore.fpdf_annot.FPDFAnnotGetFormFieldAtPoint(PDFiumCore.FpdfFormHandleT,PDFiumCore.FpdfPageT,PDFiumCore.FS_POINTF_)">
             <summary>
             <para>Experimental API.</para>
@@ -1352,6 +1367,21 @@
             <para>value   - Required. Float which will be set to font size on success.</para>
             <para>Returns true if the font size was set in |value|, false on error or if</para>
             <para>|value| not provided.</para>
+            </summary>
+        </member>
+        <member name="M:PDFiumCore.fpdf_annot.FPDFAnnotSetFontColor(PDFiumCore.FpdfFormHandleT,PDFiumCore.FpdfAnnotationT,System.UInt32,System.UInt32,System.UInt32)">
+            <summary>
+            <para>Experimental API.</para>
+            <para>Set the text color of an annotation.</para>
+            <para>handle   - handle to the form fill module, returned by</para>
+            <para>FPDFDOC_InitFormFillEnvironment.</para>
+            <para>annot    - handle to an annotation.</para>
+            <para>R        - the red component for the text color.</para>
+            <para>G        - the green component for the text color.</para>
+            <para>B        - the blue component for the text color.</para>
+            <para>Returns true if successful.</para>
+            <para>Currently supported subtypes: freetext.</para>
+            <para>The range for the color components is 0 to 255.</para>
             </summary>
         </member>
         <member name="M:PDFiumCore.fpdf_annot.FPDFAnnotGetFontColor(PDFiumCore.FpdfFormHandleT,PDFiumCore.FpdfAnnotationT,System.UInt32@,System.UInt32@,System.UInt32@)">
@@ -2175,6 +2205,20 @@
             <para>Returns true on success, false otherwise.</para>
             </summary>
         </member>
+        <member name="M:PDFiumCore.fpdf_attachment.FPDFAttachmentGetSubtype(PDFiumCore.FpdfAttachmentT,System.UInt16@,System.UInt32)">
+            <summary>
+            <para>Experimental API.</para>
+            <para>Get the MIME type (Subtype) of the embedded file |attachment|. |buffer| is</para>
+            <para>only modified if |buflen| is longer than the length of the MIME type string.</para>
+            <para>If the Subtype is not found or if there is no file stream, an empty string</para>
+            <para>would be copied to |buffer| and the return value would be 2. On other errors,</para>
+            <para>nothing would be added to |buffer| and the return value would be 0.</para>
+            <para>attachment - handle to an attachment.</para>
+            <para>buffer     - buffer for holding the MIME type string encoded in UTF-16LE.</para>
+            <para>buflen     - length of the buffer in bytes.</para>
+            <para>Returns the length of the MIME type string in bytes.</para>
+            </summary>
+        </member>
         <member name="M:PDFiumCore.fpdf_catalog.FPDFCatalogIsTagged(PDFiumCore.FpdfDocumentT)">
             <summary>
             <para>Experimental API.</para>
@@ -2712,6 +2756,21 @@
             <para>automatically freed.</para>
             </summary>
         </member>
+        <member name="M:PDFiumCore.fpdf_edit.FPDFPageInsertObjectAtIndex(PDFiumCore.FpdfPageT,PDFiumCore.FpdfPageobjectT,System.UInt64)">
+            <summary>
+            <para>Insert |page_object| into |page| at the specified |index|.</para>
+            <para>page        - handle to a page</para>
+            <para>page_object - handle to a page object as previously obtained by</para>
+            <para>FPDFPageObj_CreateNew{Path|Rect}() or</para>
+            <para>FPDFPageObj_New{Text|Image}Obj(). Ownership of the object</para>
+            <para>is transferred back to PDFium.</para>
+            <para>index       - the index position to insert the object at. If index equals</para>
+            <para>the current object count, the object will be appended to the</para>
+            <para>end. If index is greater than the object count, the function</para>
+            <para>will fail and return false.</para>
+            <para>Returns true if successful.</para>
+            </summary>
+        </member>
         <member name="M:PDFiumCore.fpdf_edit.FPDFPageRemoveObject(PDFiumCore.FpdfPageT,PDFiumCore.FpdfPageobjectT)">
             <summary>
             <para>Experimental API.</para>
@@ -2779,6 +2838,20 @@
             <para>page_object - handle to a page object.</para>
             <para>Returns one of the FPDF_PAGEOBJ_* values on success, FPDF_PAGEOBJ_UNKNOWN on</para>
             <para>error.</para>
+            </summary>
+        </member>
+        <member name="M:PDFiumCore.fpdf_edit.FPDFPageObjGetIsActive(PDFiumCore.FpdfPageobjectT,System.Int32@)">
+            <summary>
+            <para>Experimental API.</para>
+            <para>Gets active state for |page_object| within page.</para>
+            <para>page_object - handle to a page object.</para>
+            <para>active      - pointer to variable that will receive if the page object is</para>
+            <para>active. This is a required parameter. Not filled if FALSE</para>
+            <para>is returned.</para>
+            <para>For page objects where |active| is filled with FALSE, the |page_object| is</para>
+            <para>treated as if it wasn't in the document even though it is still held</para>
+            <para>internally.</para>
+            <para>Returns TRUE if the operation succeeded, FALSE if it failed.</para>
             </summary>
         </member>
         <member name="M:PDFiumCore.fpdf_edit.FPDFPageObjSetIsActive(PDFiumCore.FpdfPageobjectT,System.Int32)">
@@ -3228,6 +3301,26 @@
             <para>width        - receives the image width in pixels; must not be NULL.</para>
             <para>height       - receives the image height in pixels; must not be NULL.</para>
             <para>Returns true if successful.</para>
+            </summary>
+        </member>
+        <member name="M:PDFiumCore.fpdf_edit.FPDFImageObjGetIccProfileDataDecoded(PDFiumCore.FpdfPageobjectT,PDFiumCore.FpdfPageT,System.Byte*,System.UInt64,System.UInt64@)">
+            <summary>
+            <para>Experimental API.</para>
+            <para>Get ICC profile decoded data of |image_object|. If the |image_object| is not</para>
+            <para>an image object or if it does not have an image, then the return value will</para>
+            <para>be false. It also returns false if the |image_object| has no ICC profile.</para>
+            <para>|buffer| is only modified if ICC profile exists and |buflen| is longer than</para>
+            <para>the length of the ICC profile decoded data.</para>
+            <para>image_object - handle to an image object; must not be NULL.</para>
+            <para>page         - handle to the page containing |image_object|; must not be</para>
+            <para>NULL. Required for retrieving the image's colorspace.</para>
+            <para>buffer       - Buffer to receive ICC profile data; may be NULL if querying</para>
+            <para>required size via |out_buflen|.</para>
+            <para>buflen       - Length of the buffer in bytes. Ignored if |buffer| is NULL.</para>
+            <para>out_buflen   - Pointer to receive the ICC profile data size in bytes; must</para>
+            <para>not be NULL. Will be set if this API returns true.</para>
+            <para>Returns true if |out_buflen| is not null and an ICC profile exists for the</para>
+            <para>given |image_object|.</para>
             </summary>
         </member>
         <member name="M:PDFiumCore.fpdf_edit.FPDFPageObjCreateNewPath(System.Single,System.Single)">
@@ -3843,6 +3936,17 @@
             <para>Returns the handle to the page object, or NULL on error.</para>
             </summary>
         </member>
+        <member name="M:PDFiumCore.fpdf_edit.FPDFFormObjRemoveObject(PDFiumCore.FpdfPageobjectT,PDFiumCore.FpdfPageobjectT)">
+            <summary>
+            <para>Experimental API.</para>
+            <para>Remove |page_object| from |form_object|.</para>
+            <para>form_object - handle to a form object.</para>
+            <para>page_object - handle to a page object to be removed from the form.</para>
+            <para>Returns TRUE on success.</para>
+            <para>Ownership of the removed |page_object| is transferred to the caller.</para>
+            <para>Call FPDFPageObj_Destroy() on the removed page_object to free it.</para>
+            </summary>
+        </member>
         <member name="M:PDFiumCore.fpdf_flatten.FPDFPageFlatten(PDFiumCore.FpdfPageT,System.Int32)">
             <summary>
             <para>Flatten annotations and form fields into the page contents.</para>
@@ -4049,7 +4153,7 @@
             <para>Parameters:</para>
             <para>document        -   Handle to document, as returned by FPDF_LoadDocument() or FPDF_CreateNewDocument().</para>
             <para>pFileWrite      -   A pointer to a custom file write structure.</para>
-            <para>flags           -   The creating flags.</para>
+            <para>flags           -   Flags above that affect how the PDF gets saved. Pass in 0 when there are no flags.</para>
             <para>Return value:</para>
             <para>TRUE for succeed, FALSE for failed.</para>
             </summary>
@@ -4654,7 +4758,7 @@
             <para>Function: FPDF_SetSystemFontInfo</para>
             <para>Set the system font info interface into PDFium</para>
             <para>Parameters:</para>
-            <para>pFontInfo       -   Pointer to a FPDF_SYSFONTINFO structure</para>
+            <para>font_info       -   Pointer to a FPDF_SYSFONTINFO structure</para>
             <para>Return Value:</para>
             <para>None</para>
             <para>Comments: Platform support implementation should implement required methods of FFDF_SYSFONTINFO interface, then call this function during PDFium initialization process.</para>
@@ -4680,7 +4784,7 @@
             <para>Function: FPDF_FreeDefaultSystemFontInfo</para>
             <para>Free a default system font info interface</para>
             <para>Parameters:</para>
-            <para>pFontInfo       -   Pointer to a FPDF_SYSFONTINFO structure</para>
+            <para>font_info       -   Pointer to a FPDF_SYSFONTINFO structure</para>
             <para>Return Value:</para>
             <para>None</para>
             <para>Comments: This function should be called on the output from FPDF_GetDefaultSystemFontInfo() once it is no longer needed.</para>
