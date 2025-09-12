@@ -22,7 +22,7 @@ namespace PDFDict.SDK.Sharp.Tools
                 for (int i = 0; i < pageCount; i++)
                 {
                     var page = pdfDoc.LoadPage(i);
-                    var annots = page.LoadAnnots();
+                    var annots = page.GetPDFAnnotations();
                     pageAnnots.Add(i, annots);
                 }
 
@@ -48,7 +48,7 @@ namespace PDFDict.SDK.Sharp.Tools
                     throw new ArgumentOutOfRangeException("pageIndex", "Page index out of range");
                 }
 
-                var annots = page.LoadAnnots();
+                var annots = page.GetPDFAnnotations();
                 for (int i = 0; i < annots.Count; i++)
                 {
                     if (annots[i] is PDFWidget widget)

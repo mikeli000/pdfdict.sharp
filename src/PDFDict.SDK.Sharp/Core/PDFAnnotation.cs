@@ -1,4 +1,5 @@
 ﻿using PDFiumCore;
+using System.Drawing;
 using System.Runtime.InteropServices;
 
 namespace PDFDict.SDK.Sharp.Core
@@ -8,10 +9,11 @@ namespace PDFDict.SDK.Sharp.Core
         protected FpdfFormHandleT _formHandle;
         protected FpdfAnnotationT _annotationHandle;
 
-        public string FieldName { get; private set; }
-        public PDFAnnotTypes SubType { get; private set; }
+        public string FieldName { get; protected set; }
+        public PDFAnnotTypes SubType { get; protected set; }
+        public RectangleF BBox { get; protected set; }
 
-        public static PDFAnnotation Create(FpdfFormHandleT formHandle, FpdfAnnotationT annotHandle)
+        public static PDFAnnotation Create(FpdfDocumentT docHandle, FpdfFormHandleT formHandle, FpdfAnnotationT annotHandle)
         {
             PDFAnnotTypes subType = (PDFAnnotTypes)fpdf_annot.FPDFAnnotGetSubtype(annotHandle);
 
@@ -21,7 +23,7 @@ namespace PDFDict.SDK.Sharp.Core
             }
             else if (subType == PDFAnnotTypes.FPDF_ANNOT_LINK)
             {
-                return new PDFLink(formHandle, annotHandle);
+                return new PDFLink(docHandle, formHandle, annotHandle);
             }
             else if (subType == PDFAnnotTypes.FPDF_ANNOT_TEXT)
             {
@@ -48,6 +50,7 @@ namespace PDFDict.SDK.Sharp.Core
 
             ReadFieldName();
             ReadSubtype();
+            ReadBBox();
         }
 
         private void ReadFieldName()
@@ -68,6 +71,21 @@ namespace PDFDict.SDK.Sharp.Core
             int subType = fpdf_annot.FPDFAnnotGetSubtype(_annotationHandle);
             SubType = (PDFAnnotTypes)subType;
         }
+
+        private void ReadBBox()
+        {
+            FS_RECTF_ rect = new FS_RECTF_();
+            var res = fpdf_annot.FPDFAnnotGetRect(_annotationHandle, rect);
+
+            if (res > 0)
+            {
+                BBox = new RectangleF(rect.Left, rect.Bottom, rect.Right - rect.Left, rect.Top - rect.Bottom);
+            }
+            else
+            {
+                BBox = RectangleF.Empty;
+            }
+        } 
 
         public override string ToString()
         {
@@ -155,23 +173,61 @@ namespace PDFDict.SDK.Sharp.Core
     public class PDFLink : PDFAnnotation
     {
         public PDFAction Action { get; private set; }
+        public string URI { get; private set; }
 
-        public PDFLink(FpdfFormHandleT formHandle, FpdfAnnotationT annotHandle) : base(formHandle, annotHandle)
+        public PDFLink(FpdfDocumentT docHandle, FpdfFormHandleT formHandle, FpdfAnnotationT annotHandle) : base(formHandle, annotHandle)
         {
-            ReadLink();
+            ReadLink(docHandle);
+            ReadContents();
         }
 
-        private void ReadLink()
+        private void ReadLink(FpdfDocumentT docHandle)
         {
             FpdfLinkT fpdfLinkT = fpdf_annot.FPDFAnnotGetLink(_annotationHandle);
             FpdfActionT fpdfActionT = fpdf_doc.FPDFLinkGetAction(fpdfLinkT);
             int t = (int)fpdf_doc.FPDFActionGetType(fpdfActionT);
             PDFAction.PDFActionType actionType = (PDFAction.PDFActionType)t;
+
+            if (actionType == PDFAction.PDFActionType.URI)
+            {
+                unsafe
+                {
+                    Func<IntPtr, int, int> nativeFunc = (buf, maxByteCount) =>
+                    {
+                        var len = fpdf_doc.FPDFActionGetURIPath(docHandle, fpdfActionT, buf, (uint)maxByteCount);
+                        return (int)len;
+                    };
+                    URI = NativeStringReader.UnsafeRead_UTF8_Twice(nativeFunc);
+                }
+            }
+
+            Action = new PDFAction()
+            {
+                ActionType = actionType,
+                URI = URI
+            };
+        }
+
+        private void ReadContents()
+        {
+            string key = "Contents";
+            if (fpdf_annot.FPDFAnnotHasKey(_annotationHandle, key) > 0)
+            {
+                unsafe
+                {
+                    Func<IntPtr, int, int> nativeFunc = (buf, maxByteCount) =>
+                    {
+                        var len = fpdf_annot.FPDFAnnotGetStringValue(_annotationHandle, "Contents", ref ((ushort*)buf)[0], (uint)maxByteCount);
+                        return (int)len;
+                    };
+                    FieldName = NativeStringReader.UnsafeRead_UTF16_LE(nativeFunc);
+                }
+            }
         }
 
         public override string GetDisplayText()
         {
-            return $"Link to: {Action?.URI}";
+            return URI;
         }
     }
 

@@ -21,7 +21,7 @@ namespace PDFDict.SDK.Sharp.Core.Contents
             return $"Image: {PDFImage}, BBox: {BBox}";
         }
 
-        public override bool TryBuildHTMLPiece(out string html)
+        public override bool TryBuildHTMLPiece(out string html, string altText = null)
         {
             html = null;
             return false;

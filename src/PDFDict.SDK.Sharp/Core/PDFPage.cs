@@ -15,6 +15,8 @@ namespace PDFDict.SDK.Sharp.Core
         private DrawingParams _graphicsState;
         private bool _isTagged;
         private PageThread _pageThread;
+        private List<PDFAnnotation> _annots;
+        private RectangleF _pageBBox = RectangleF.Empty;
 
         private PDFPage(PDFDocument pdfDoc, FpdfPageT pagePtr, int pageIndex)
         {
@@ -22,12 +24,21 @@ namespace PDFDict.SDK.Sharp.Core
             _pagePtr = pagePtr;
             _pageIndex = pageIndex;
 
+            FS_RECTF_ rect = new FS_RECTF_();
+            var res = fpdfview.FPDF_GetPageBoundingBox(pagePtr, rect);
+            if (res > 0)
+            {
+                _pageBBox = new RectangleF(rect.Left, rect.Bottom, rect.Right - rect.Left, rect.Top - rect.Bottom);
+            }
+
             var pdfStructtreeT = fpdf_structtree.FPDF_StructTreeGetForPage(GetHandle());
             _isTagged = pdfStructtreeT != null;
             if (pdfStructtreeT != null)
             {
                 fpdf_structtree.FPDF_StructTreeClose(pdfStructtreeT);
             }
+
+            _annots = LoadAnnots();
         }
 
         public static PDFPage Create(PDFDocument pdfDoc, int pageIndex, double width, double height)
@@ -39,7 +50,9 @@ namespace PDFDict.SDK.Sharp.Core
         public static PDFPage Load(PDFDocument pdfDoc, int pageIndex)
         {
             var pagePtr = fpdfview.FPDF_LoadPage(pdfDoc.GetHandle(), pageIndex);
-            return new PDFPage(pdfDoc, pagePtr, pageIndex);
+            var page = new PDFPage(pdfDoc, pagePtr, pageIndex);
+
+            return page;
         }
 
         public bool IsTagged()
@@ -188,6 +201,52 @@ namespace PDFDict.SDK.Sharp.Core
             return _pageThread;
         }
 
+        public void EnhancePathRendering(Color? strokeColor = null, float lineWidth = 0.5f)
+        {
+            if (strokeColor == null)
+            {
+                strokeColor = Color.Red;
+            }
+            uint r = 0, g = 0, b = 0;
+            r = strokeColor?.R ?? 0;
+            g = strokeColor?.G ?? 0;
+            b = strokeColor?.B ?? 0;
+
+            int objCount = fpdf_edit.FPDFPageCountObjects(_pagePtr);
+            for (int i = 0; i < objCount; i++)
+            {
+                var pageObj = fpdf_edit.FPDFPageGetObject(_pagePtr, i);
+                var type = fpdf_edit.FPDFPageObjGetType(pageObj);
+
+                if (type == FPDF_PAGEOBJ_TYPE.FPDF_PAGEOBJ_PATH)
+                {
+                    var ret = fpdf_edit.FPDFPageObjSetStrokeColor(pageObj, r, g, b, 255);
+                    //ret &= fpdf_edit.FPDFPageObjSetFillColor(pageObj, 255, 255, 0, 255);
+                    ret &= fpdf_edit.FPDFPageObjSetStrokeWidth(pageObj, lineWidth);
+                    ret &= fpdf_edit.FPDFPathSetDrawMode(pageObj, 1, 1);
+                }
+                else if (type == FPDF_PAGEOBJ_TYPE.FPDF_PAGEOBJ_FORM)
+                {
+                    int m = fpdf_edit.FPDFFormObjCountObjects(pageObj);
+                    for (uint j = 0; j < m; j++)
+                    {
+                        var xobj = fpdf_edit.FPDFFormObjGetObject(pageObj, j);
+                        var xobjType = fpdf_edit.FPDFPageObjGetType(xobj);
+
+                        if (xobjType == FPDF_PAGEOBJ_TYPE.FPDF_PAGEOBJ_PATH)
+                        {
+                            int ret = fpdf_edit.FPDFPageObjSetStrokeColor(xobj, r, g, b, 255);
+                            //ret &= fpdf_edit.FPDFPageObjSetFillColor(xobj, 255, 255, 0, 255);
+                            ret &= fpdf_edit.FPDFPageObjSetStrokeWidth(xobj, lineWidth);
+                            ret &= fpdf_edit.FPDFPathSetDrawMode(xobj, 1, 1);
+                        }
+                    }
+                }
+            }
+
+            Save();
+        }
+
         public bool KeepPathOblyUntilFail()
         {
             int objCount = fpdf_edit.FPDFPageCountObjects(_pagePtr);
@@ -241,7 +300,7 @@ namespace PDFDict.SDK.Sharp.Core
             return true;
         }
 
-        public void KeepPathObly()
+        public void RenderPathObly()
         {
             while (!KeepPathOblyUntilFail())
             {
@@ -254,8 +313,10 @@ namespace PDFDict.SDK.Sharp.Core
         private void BuildTextThread(PageThread pageThread)
         {
             var pageTextPtr = fpdf_text.FPDFTextLoadPage(_pagePtr);
-            int charCount = fpdf_text.FPDFTextCountChars(pageTextPtr);
 
+            var pageLinks = LoadPageLinks(pageTextPtr);
+
+            int charCount = fpdf_text.FPDFTextCountChars(pageTextPtr);
             string chars = string.Empty;
             unsafe
             {
@@ -385,15 +446,38 @@ namespace PDFDict.SDK.Sharp.Core
 
                 double x = 0, y = 0;
                 fpdf_text.FPDFTextGetCharOrigin(pageTextPtr, i, ref x, ref y);
-                var wordBlocks = ResolveWordBlock(pageTextPtr, textRun, i, bbox, textState.SpaceWidth);
+
+
+                double left1 = 0, right1 = 0, bottom1 = 0, top1 = 0;
+                fpdf_text.FPDFTextGetCharBox(pageTextPtr, i, ref left1, ref right1, ref bottom1, ref top1);
+
+                var link = pageLinks.FirstOrDefault(item => i == item.StartCharIndex);
+                var wordBlocks = ResolveWordBlock(pageTextPtr, textRun, i, bbox, textState.SpaceWidth, link);
                 foreach (var block in wordBlocks)
                 {
-                    bool appended = textElement.TryAppendText(block.Word, block.X, block.Y, block.BBox, gState, mid);
+                    SetAnnot(block);
+
+                    var t_p = TransPointToPageSpace(block.X, block.Y);
+                    var t_rect = TransRectToPageSpace(block.BBox);
+                    bool appended = textElement.TryAppendText(block.Word, t_p.Item1, t_p.Item2, t_rect, gState, mid);
                     if (!appended)
                     {
                         textElement = new TextElement();
-                        textElement.TryAppendText(block.Word, block.X, block.Y, block.BBox, gState, mid);
+                        textElement.TryAppendText(block.Word, t_p.Item1, t_p.Item2, t_rect, gState, mid);
                         pageThread.AddPageElement(textElement);
+                    }
+                    
+                    if (block.Link != null)
+                    {
+                        textElement.SetLink(block.Link.Url);
+                    }
+                    else
+                    {
+                        if (block.Annot != null && block.Annot.SubType == PDFAnnotTypes.FPDF_ANNOT_LINK)
+                        {
+                            var annotLink = (PDFLink)block.Annot;
+                            textElement.SetLink(annotLink.URI, annotLink.FieldName);
+                        }
                     }
                 }
 
@@ -401,15 +485,92 @@ namespace PDFDict.SDK.Sharp.Core
             }
         }
 
-        public class WordBlock
+        private (double, double) TransPointToPageSpace(double x, double y)
         {
-            public string Word { get; set; }
-            public RectangleF BBox { get; set; }
-            public double X { get; set; }
-            public double Y { get; set; }
+            if (_pageBBox == RectangleF.Empty)
+            {
+                return (x, y);
+            }
+
+            double tx = x - _pageBBox.Left;
+            double ty = y - _pageBBox.Top;
+            return (tx, ty);
         }
 
-        private List<WordBlock> ResolveWordBlock(FpdfTextpageT pageTextPtr, string textRun, int i, RectangleF bbox, double spaceW)
+        private RectangleF TransRectToPageSpace(RectangleF rect)
+        {
+            if (_pageBBox == RectangleF.Empty)
+            {
+                return rect;
+            }
+
+            float left = rect.Left - _pageBBox.Left;
+            float top = rect.Top - _pageBBox.Top;
+            return new RectangleF(left, top, rect.Width, rect.Height);
+        }
+
+        private void SetAnnot(WordBlock wordBlock)
+        {
+            if (_annots == null || _annots.Count() <= 0)
+            {
+                return;
+            }
+
+            foreach (var annot in _annots)
+            {
+                if (annot.BBox.Contains(wordBlock.BBox))
+                {
+                    wordBlock.Annot = annot;
+                    break;
+                }
+            }
+        }
+
+        private List<LinkBlock> LoadPageLinks(FpdfTextpageT pageTextPtr)
+        {
+            var pageLinkPtr = fpdf_text.FPDFLinkLoadWebLinks(pageTextPtr);
+
+            try
+            {
+                var count = fpdf_text.FPDFLinkCountWebLinks(pageLinkPtr);
+                if (count <= 0)
+                {
+                    return new List<LinkBlock>();
+                }
+
+                var linkBlocks = new List<LinkBlock>(count);
+
+                for (int i = 0; i < count; i++)
+                {
+                    int start_char_index = 0, char_count = 0;
+                    var ret = fpdf_text.FPDFLinkGetTextRange(pageLinkPtr, i, ref start_char_index, ref char_count);
+                    if (ret > 0)
+                    {
+                        var linkBlock = new LinkBlock();
+                        linkBlock.StartCharIndex = start_char_index;
+                        linkBlock.CharCount = char_count;
+                        unsafe
+                        {
+                            Func<IntPtr, int, int> nativeFunc = (buf, count) =>
+                            {
+                                var len = fpdf_text.FPDFLinkGetURL(pageLinkPtr, i, ref ((ushort*)buf)[0], count);
+                                return len;
+                            };
+                            linkBlock.Url = NativeStringReader.UnsafeRead_UTF16_LE_2(nativeFunc); 
+                        }
+                        
+                        linkBlocks.Add(linkBlock);
+                    }
+                }
+                return linkBlocks;
+            }
+            finally
+            {
+                fpdf_text.FPDFLinkCloseWebLinks(pageLinkPtr);
+            }
+        }
+
+        private List<WordBlock> ResolveWordBlock(FpdfTextpageT pageTextPtr, string textRun, int i, RectangleF bbox, double spaceW, LinkBlock link)
         {
             var workBlocks = new List<WordBlock>();
             double tw = bbox.Width;
@@ -469,7 +630,8 @@ namespace PDFDict.SDK.Sharp.Core
                     Word = textRun,
                     BBox = bbox,
                     X = bbox.Left,
-                    Y = bbox.Top
+                    Y = bbox.Top,
+                    Link = link
                 });
                 return workBlocks;
             }
@@ -490,7 +652,8 @@ namespace PDFDict.SDK.Sharp.Core
                     Word = word,
                     BBox = wordBox,
                     X = startX,
-                    Y = startY
+                    Y = startY,
+                    Link = link
                 });
 
                 j++;
@@ -604,7 +767,12 @@ namespace PDFDict.SDK.Sharp.Core
             return images.ToArray();
         }
 
-        public IList<PDFAnnotation> LoadAnnots()
+        public List<PDFAnnotation> GetPDFAnnotations()
+        {
+            return _annots;
+        }
+
+        private List<PDFAnnotation> LoadAnnots()
         {
             FPDF_FORMFILLINFO formfillInfo = new FPDF_FORMFILLINFO();
             formfillInfo.Version = 1;
@@ -615,7 +783,7 @@ namespace PDFDict.SDK.Sharp.Core
             for (int i = 0; i < count; i++)
             {
                 var annot = fpdf_annot.FPDFPageGetAnnot(_pagePtr, i);
-                var pdfAnnot = PDFAnnotation.Create(formHandle, annot);
+                var pdfAnnot = PDFAnnotation.Create(_pdfDoc.GetHandle(), formHandle, annot);
 
                 pdfAnnots.Add(pdfAnnot);
             }
@@ -925,5 +1093,23 @@ namespace PDFDict.SDK.Sharp.Core
     {
         FLAT_NORMALDISPLAY = 0,
         FLAT_PRINT = 1
+    }
+
+    public class WordBlock
+    {
+        public string Word { get; set; }
+        public RectangleF BBox { get; set; }
+        public double X { get; set; }
+        public double Y { get; set; }
+        public LinkBlock Link { get; set; }
+        public PDFAnnotation Annot { get; set; }
+    }
+
+    public class LinkBlock
+    {
+        public string Url { get; set; }
+        public RectangleF BBox { get; set; }
+        public int StartCharIndex { get; set; }
+        public int CharCount { get; set; }
     }
 }

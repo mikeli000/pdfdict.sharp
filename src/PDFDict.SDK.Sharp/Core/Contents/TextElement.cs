@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PDFDict.SDK.Sharp.Core.Tabula;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -10,7 +11,7 @@ namespace PDFDict.SDK.Sharp.Core.Contents
     public class TextElement : PageElement
     {
         private double _deltaBaseline = 0.1;
-        private double _deltaDistanceRatio = 1.5;
+        private double _deltaDistanceRatio = 1.3;
 
         private double _baselineX = double.MinValue;
         private double _baselineY = double.MinValue;
@@ -18,6 +19,9 @@ namespace PDFDict.SDK.Sharp.Core.Contents
         private GraphicsState _gState;
         private StringBuilder _text;
         private Dictionary<int, string> _markedContentDict = new Dictionary<int, string>();
+        private string _tooltip = null;
+        private string _linkUrl = null;
+        private bool _hasLink = false;
 
         public TextElement() : base(ElementType.Text, RectangleF.Empty)
         {
@@ -39,14 +43,42 @@ namespace PDFDict.SDK.Sharp.Core.Contents
             return _gState;
         }
 
-        public string GetText()
+        public string GetText(bool outputMarkdownLink = false)
         {
-            return _text.ToString();
+            string text = _text.ToString();
+            if (outputMarkdownLink && HasLink())
+            {
+                if (string.IsNullOrEmpty(_tooltip) || string.Equals(text, _tooltip))
+                {
+                    return $"[{text}]({_linkUrl})";
+                }
+                else
+                {
+                    return $"{text} " + $"[{_tooltip}]({_linkUrl})";
+                }
+            }
+
+            return text;
         }
 
         public Dictionary<int, string> GetMarkedContentDict()
         {
             return _markedContentDict;
+        }
+
+        public void SetLink(string url, string tooltip = null)
+        {
+            if (!string.IsNullOrEmpty(url))
+            {
+                _hasLink = true;
+                _linkUrl = url;
+                _tooltip = tooltip?? string.Empty;
+            }
+        }
+
+        public bool HasLink()
+        {
+            return _hasLink;
         }
 
         public bool TryAppendChar(char c, double originX, double originY, RectangleF bbox, GraphicsState gState)
@@ -112,6 +144,10 @@ namespace PDFDict.SDK.Sharp.Core.Contents
             }
 
             double space = gState.TextState.SpaceWidth;
+            if (space <= 1)
+            {
+                space = AverageCharWidth();
+            }
             if (Distance(originX, originY) > space * _deltaDistanceRatio)
             {
                 return false;
@@ -220,8 +256,9 @@ namespace PDFDict.SDK.Sharp.Core.Contents
                 "A)", "B)", "C)", "D)", "E)",
             };
 
-        public static bool IsListParagraphBegin(string text, out string bullet)
+        public static bool IsListParagraphBegin(string text, out bool ordered, out string bullet)
         {
+            ordered = false;
             bullet = string.Empty;
             if (string.IsNullOrEmpty(text.Trim()))
             {
@@ -255,11 +292,13 @@ namespace PDFDict.SDK.Sharp.Core.Contents
                     if (text.Length == tag.Length)
                     {
                         bullet = tag;
+                        ordered = true;
                         return true;
                     }
                     else if (text.Length > tag.Length && Char.IsWhiteSpace(text[tag.Length]))
                     {
                         bullet = tag + " ";
+                        ordered = true;
                         return true;
                     }
                     else
@@ -283,7 +322,7 @@ namespace PDFDict.SDK.Sharp.Core.Contents
             return false;
         }
 
-        public override bool TryBuildHTMLPiece(out string html)
+        public override bool TryBuildHTMLPiece(out string html, string altText = null)
         {
             html = null;
 
@@ -295,7 +334,13 @@ namespace PDFDict.SDK.Sharp.Core.Contents
                     return false;
                 }
 
-                html = $"<span style=\"{css}\">{GetText()}</span>";
+                string text = altText == null ? GetText() : altText;
+                html = $"<span style=\"{css}\">{text}</span>";
+
+                if (HasLink())
+                {
+                    html = $"<a href=\"{_linkUrl}\">{html}</a>";
+                }
                 return true;
             }
 
@@ -314,7 +359,7 @@ namespace PDFDict.SDK.Sharp.Core.Contents
                 var sb = new StringBuilder();
                 if (g.NonStrokingColor != null)
                 {
-                    var color = ConvertColor(g.NonStrokingColor);
+                    var color = ConvertColor(g.NonStrokingColor, true);
                     if (color != null)
                     {
                         sb.Append($"color: {color};");
@@ -339,13 +384,20 @@ namespace PDFDict.SDK.Sharp.Core.Contents
                 return sb.ToString();
             }
 
-            private static string ConvertColor(ColorState color)
+            private static string ConvertColor(ColorState color, bool whiteToBlack = false)
             {
                 if (color?.Components != null && color?.Components.Length == 4)
                 {
                     int r = (int)color.Components[0];
                     int g = (int)color.Components[1];
                     int b = (int)color.Components[2];
+
+                    if (r > 222 && g > 222 && b > 222)
+                    {
+                        r = 0;
+                        g = 0;
+                        b = 0;
+                    }
                     return $"rgb({r},{g},{b})";
                 }
 

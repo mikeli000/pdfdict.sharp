@@ -111,7 +111,34 @@ namespace PDFDict.SDK.Sharp.Tools
                 for (int i = 0; i < pageCount; i++)
                 {
                     var pdfPage = pdfDoc.LoadPage(i);
-                    pdfPage.KeepPathObly();
+                    pdfPage.RenderPathObly();
+
+                    string pageImagePath = Path.Combine(outputFolder, $"page-{i + 1}.png");
+                    pdfDoc.RenderPage(pageImagePath, pdfPage, resolution, backgroundColor, renderFlag);
+                }
+            }
+        }
+
+        public static void RenderTableEnhanced(string pdfFile, string outputFolder, float resolution = 96f, Color? backgroundColor = null, int renderFlag = 0)
+        {
+            if (!File.Exists(pdfFile))
+            {
+                throw new FileNotFoundException("PDF file not found", pdfFile);
+            }
+
+            if (!Directory.Exists(outputFolder))
+            {
+                Directory.CreateDirectory(outputFolder);
+            }
+
+            using (PDFDocument pdfDoc = PDFDocument.Load(pdfFile))
+            {
+                int pageCount = pdfDoc.GetPageCount();
+
+                for (int i = 0; i < pageCount; i++)
+                {
+                    var pdfPage = pdfDoc.LoadPage(i);
+                    pdfPage.EnhancePathRendering();
 
                     string pageImagePath = Path.Combine(outputFolder, $"page-{i + 1}.png");
                     pdfDoc.RenderPage(pageImagePath, pdfPage, resolution, backgroundColor, renderFlag);
@@ -149,10 +176,11 @@ namespace PDFDict.SDK.Sharp.Tools
                     {
                         continue;
                     }
+                    string pageNoText = string.Join("_", importedPages.Select(p => (p + 1).ToString()));
                     using (var newDoc = PDFDocument.Create())
                     {
                         newDoc.ImportPages(pdfDoc, importedPages, 0);
-                        string outputPath = Path.Combine(outputFolder, @$"{i}_{fileInfo.Name}");
+                        string outputPath = Path.Combine(outputFolder, @$"{pageNoText}_{fileInfo.Name}");
                         newDoc.Save(outputPath, true);
                     }
                 }

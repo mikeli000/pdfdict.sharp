@@ -13,7 +13,7 @@ namespace PDFDict.SDK.Sharp.Core.Contents
         {
         }
 
-        public override bool TryBuildHTMLPiece(out string html)
+        public override bool TryBuildHTMLPiece(out string html, string altText = null)
         {
             html = null;
             return false;

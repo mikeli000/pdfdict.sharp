@@ -22,7 +22,7 @@ namespace PDFDict.SDK.Sharp.Core.Contents
             BBox = bbox;
         }
 
-        abstract public bool TryBuildHTMLPiece(out string html);
+        abstract public bool TryBuildHTMLPiece(out string html, string altText = null);
     }
 
     public class GraphicsState : IEquatable<GraphicsState>
