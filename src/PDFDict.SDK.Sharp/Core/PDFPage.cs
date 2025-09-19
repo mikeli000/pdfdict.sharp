@@ -218,6 +218,11 @@ namespace PDFDict.SDK.Sharp.Core
                 var pageObj = fpdf_edit.FPDFPageGetObject(_pagePtr, i);
                 var type = fpdf_edit.FPDFPageObjGetType(pageObj);
 
+                //if (!IsStraghitLine(pageObj))
+                //{
+                //    continue;
+                //}
+
                 if (type == FPDF_PAGEOBJ_TYPE.FPDF_PAGEOBJ_PATH)
                 {
                     var ret = fpdf_edit.FPDFPageObjSetStrokeColor(pageObj, r, g, b, 255);
@@ -245,6 +250,58 @@ namespace PDFDict.SDK.Sharp.Core
             }
 
             Save();
+        }
+
+        private bool IsStraghitLine(FpdfPageobjectT pathObj)
+        {
+            var segCount = fpdf_edit.FPDFPathCountSegments(pathObj);
+            var points = new List<(float x, float y)>();
+            for (int i = 0; i < segCount; i++)
+            {
+                var segment = fpdf_edit.FPDFPathGetPathSegment(pathObj, i);
+                if (fpdf_edit.FPDFPathSegmentGetClose(segment) > 0)
+                {
+                    return false;
+                }
+
+                int segmentType = fpdf_edit.FPDFPathSegmentGetType(segment);
+                if (segmentType == FPDF_SEGMENT_COMMAND.FPDF_SEGMENT_BEZIERTO)
+                {
+                    return false;
+                }
+
+                /** TODO
+                if (segmentType == FPDF_SEGMENT_COMMAND.FPDF_SEGMENT_MOVETO)
+                {
+                    points.Clear();
+
+                    float x = 0, y = 0;
+                    if (fpdf_edit.FPDFPathSegmentGetPoint(segment, ref x, ref y) > 0)
+                    {
+                        points.Add((x, y));
+                    }
+                }
+                else if (segmentType == FPDF_SEGMENT_COMMAND.FPDF_SEGMENT_LINETO)
+                {
+                    float x = 0, y = 0;
+                    if (fpdf_edit.FPDFPathSegmentGetPoint(segment, ref x, ref y) > 0)
+                    {
+                        if (points.Count > 0)
+                        {
+                            var found = points.Any(p => Math.Abs(p.x - x) > 0.1 && Math.Abs(p.y - y) > 0.1);
+                            if (found)
+                            {
+                                return false;
+                            }
+                        }
+
+                        points.Add((x, y));
+                    }
+                }
+                */
+            }
+
+            return true;
         }
 
         public bool KeepPathOblyUntilFail()
@@ -447,7 +504,6 @@ namespace PDFDict.SDK.Sharp.Core
                 double x = 0, y = 0;
                 fpdf_text.FPDFTextGetCharOrigin(pageTextPtr, i, ref x, ref y);
 
-
                 double left1 = 0, right1 = 0, bottom1 = 0, top1 = 0;
                 fpdf_text.FPDFTextGetCharBox(pageTextPtr, i, ref left1, ref right1, ref bottom1, ref top1);
 
@@ -607,7 +663,7 @@ namespace PDFDict.SDK.Sharp.Core
                 }
                 else
                 {
-                    if (posBoxes[j].Item2[0] - lastX > 2 * spaceW)
+                    if (posBoxes[j].Item2[0] - lastX > 1.5 * spaceW)
                     {
                         sep.Add((j - 1, lastR, lastY));
                         sep.Add((j, posBoxes[j].Item2[0], posBoxes[j].Item2[1]));

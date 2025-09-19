@@ -1,15 +1,30 @@
-﻿using PDFDict.SDK.Sharp.Core.Tabula;
-using System;
-using System.Collections.Generic;
+﻿using System.Data.SqlTypes;
 using System.Drawing;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace PDFDict.SDK.Sharp.Core.Contents
 {
     public class TextElement : PageElement
     {
+
+        public static IDictionary<char, char> CharToSup = new Dictionary<char, char>
+        {
+            { '0', '⁰' }, { '1', '¹' }, { '2', '²' }, { '3', '³' }, { '4', '⁴' },
+            { '5', '⁵' }, { '6', '⁶' }, { '7', '⁷' }, { '8', '⁸' }, { '9', '⁹' },
+            //{ '+', '⁺' }, { '-', '⁻' }, { '=', '⁼' }, { '(', '⁽' }, { ')', '⁾' },
+            //{ 'n', 'ⁿ' }, { 'i', 'ⁱ' }
+        };
+
+        public static IDictionary<char, char> CharToSub = new Dictionary<char, char>
+        {
+            { '0', '₀' }, { '1', '₁' }, { '2', '₂' }, { '3', '₃' }, { '4', '₄' },
+            { '5', '₅' }, { '6', '₆' }, { '7', '₇' }, { '8', '₈' }, { '9', '₉' },
+            //{ '+', '₊' }, { '-', '₋' }, { '=', '₌' }, { '(', '₍' }, { ')', '₎' },
+            //{ 'a', 'ₐ' }, { 'e', 'ₑ' }, { 'o', 'ₒ' }, { 'x', 'ₓ' }, { 'h', 'ₕ' },
+            //{ 'k', 'ₖ' }, { 'l', 'ₗ' }, { 'm', 'ₘ' }, { 'n', 'ₙ' }, { 'p', 'ₚ' },
+            //{ 's', 'ₛ' }, { 't', 'ₜ' }
+        };
+
         private double _deltaBaseline = 0.1;
         private double _deltaDistanceRatio = 1.3;
 
@@ -116,6 +131,60 @@ namespace PDFDict.SDK.Sharp.Core.Contents
             return true;
         }
 
+        public bool TryMatchSupSub(string text, double originX, double originY, RectangleF bbox, GraphicsState gState, out string scriptChar)
+        {
+            scriptChar = text;
+            if (text.Trim().Length == 0 && text.Length < 5)
+            {
+                return false;
+            }
+            // check if SUB or SUP
+            bool charMatch = text.All(c => c == ' ' || (CharToSup.ContainsKey(c) || CharToSub.ContainsKey(c)));
+            if (!charMatch) 
+            {
+                return false;
+            }
+
+            bool fontSizeMatch = false;
+            if (Math.Abs(originX - BBox.Right) < _gState.TextState?.SpaceWidth / 2)
+            {
+                var preFontSize = _gState.TextState.FontSize;
+                var currFontSize = gState.TextState.FontSize;
+                if (preFontSize * 3 / 4 >= currFontSize)
+                {
+                    fontSizeMatch = true;
+                }
+            }
+            if (!fontSizeMatch)
+            {
+                return false;
+            }
+
+            bool isSup = false;
+            bool isSub = false;
+            var preMidY = (BBox.Top + BBox.Bottom) / 2;
+            var currMidY = (bbox.Top + bbox.Bottom) / 2;
+            if (preMidY < currMidY)
+            {
+                isSup = true;
+            }
+            else if (preMidY > currMidY)
+            {
+                isSub = true;
+            }
+
+            if (isSup)
+            {
+                scriptChar = string.Concat(text.Select(c => c == ' ' ? " " : (CharToSup.ContainsKey(c) ? CharToSup[c].ToString() : c.ToString())));
+            }
+            else if (isSub)
+            {
+                scriptChar = string.Concat(text.Select(c => c == ' ' ? " " : (CharToSub.ContainsKey(c) ? CharToSub[c].ToString() : c.ToString())));
+            }
+
+            return true;
+        }
+
         public bool TryAppendText(string text, double originX, double originY, RectangleF bbox, GraphicsState gState, int markedContentID = -1)
         {
             if (_text.Length == 0)
@@ -130,6 +199,15 @@ namespace PDFDict.SDK.Sharp.Core.Contents
                 {
                     _markedContentDict[markedContentID] = text;
                 }
+                return true;
+            }
+
+            if (TryMatchSupSub(text, originX, originY, bbox, gState, out var scriptChar) && !string.Equals(text, scriptChar))
+            {
+                // TODO simple union currently, but <sup> <sub> should be seperated for post processing
+                _text.Append(scriptChar);
+                BBox = RectangleF.Union(BBox, bbox);
+
                 return true;
             }
 
@@ -152,6 +230,7 @@ namespace PDFDict.SDK.Sharp.Core.Contents
             {
                 return false;
             }
+
 
             _text.Append(text);
             BBox = RectangleF.Union(BBox, bbox);

@@ -41,6 +41,10 @@ namespace PDFDict.SDK.Sharp.Core
                         return string.Empty;
                     }
                     string s = Marshal.PtrToStringUni(ptr, len / 2 - 1);
+                    if (s.EndsWith('\0'))
+                    {
+                        s = s.Substring(0, s.Length - 1);
+                    }
                     return s;
                 }
                 finally
