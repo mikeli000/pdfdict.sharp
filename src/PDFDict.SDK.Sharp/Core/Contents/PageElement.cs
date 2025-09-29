@@ -114,6 +114,8 @@ namespace PDFDict.SDK.Sharp.Core.Contents
         public float HorizontalScaling = 100;
         public float Leading = 0;
         public float FontSize = 0;
+        public float Ascent = 0;
+        public float Descent = 0;
         public float Rise = 0;
         public bool Knockout = true;
         public string FontFamilyName = string.Empty;

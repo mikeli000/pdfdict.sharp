@@ -12,7 +12,7 @@ namespace PDFDict.SDK.Sharp.Tools
 {
     public partial class PDFTools
     {
-        public static void DrawTextBox(string pdfFile, string outputFolder, float resolution = 300f, Color? backgroundColor = null, int renderFlag = 0)
+        public static void DrawTextBoxOnPDF(string pdfFile, string outputFolder, float resolution = 300f, Color? backgroundColor = null, int renderFlag = 0)
         {
             if (!File.Exists(pdfFile))
             {
@@ -23,6 +23,37 @@ namespace PDFDict.SDK.Sharp.Tools
             {
                 Directory.CreateDirectory(outputFolder);
             }
+
+            string outputFile = Path.Combine(outputFolder, Path.GetFileName(pdfFile));
+
+            using (PDFDocument pdfDoc = PDFDocument.Load(pdfFile))
+            {
+                int pageCount = pdfDoc.GetPageCount();
+
+                for (int i = 0; i < pageCount; i++)
+                {
+                    using (var pdfPage = pdfDoc.LoadPage(i))
+                    {
+                        DrawBoxOnPDF(pdfPage);
+                    }
+                }
+                pdfDoc.Save(outputFile, true);
+            }
+        }
+
+        public static void DrawTextBoxOnImage(string pdfFile, string outputFolder, float resolution = 300f, Color? backgroundColor = null, int renderFlag = 0)
+        {
+            if (!File.Exists(pdfFile))
+            {
+                throw new FileNotFoundException("PDF file not found", pdfFile);
+            }
+
+            if (!Directory.Exists(outputFolder))
+            {
+                Directory.CreateDirectory(outputFolder);
+            }
+
+            string outputFile = Path.Combine(outputFolder, Path.GetFileName(pdfFile));
 
             using (PDFDocument pdfDoc = PDFDocument.Load(pdfFile))
             {
@@ -35,13 +66,32 @@ namespace PDFDict.SDK.Sharp.Tools
 
                     using (var pdfPage = pdfDoc.LoadPage(i))
                     {
-                        DrawBox(pdfPage, pageImagePath);
+                        DrawBoxOnImage(pdfPage, pageImagePath);
                     }
                 }
             }
         }
 
-        static void DrawBox(PDFPage pdfPage, string img)
+        static void DrawBoxOnPDF(PDFPage pdfPage)
+        {
+            var thread = pdfPage.BuildPageThread();
+            var eles = thread.GetTextThread().GetTextElements();
+
+            foreach (var e in eles)
+            {
+                if (e.BBox == null || e.BBox.IsEmpty)
+                {
+                    continue;
+                }
+
+                pdfPage.DrawRect(e.BBox, new DrawingParams());
+            }
+
+            pdfPage.Save();
+
+        }
+
+        static void DrawBoxOnImage(PDFPage pdfPage, string img)
         {
             var thread = pdfPage.BuildPageThread();
             var eles = thread.GetTextThread().GetTextElements();

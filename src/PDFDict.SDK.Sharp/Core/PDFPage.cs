@@ -442,6 +442,10 @@ namespace PDFDict.SDK.Sharp.Core
                 {
                     textState.FontSize = fontSize;
                 }
+                if (textState.FontSize <= 1 && gState.Matrix != null)
+                {
+                    textState.FontSize = gState.Matrix.GetScaleX();
+                }
 
                 var fontObj = fpdf_edit.FPDFTextObjGetFont(textObj);
                 if (fontObj != null)
@@ -482,6 +486,17 @@ namespace PDFDict.SDK.Sharp.Core
                                 return (int)len;
                             };
                             textState.FontFamilyName = NativeStringReader.UnsafeRead_UTF8(nativeFunc2);
+                        }
+
+                        float ascent = 0;
+                        if (fpdf_edit.FPDFFontGetAscent(fontObj, textState.FontSize, ref ascent) > 0)
+                        {
+                            textState.Ascent = ascent;
+                        }
+                        float descent = 0;
+                        if (fpdf_edit.FPDFFontGetDescent(fontObj, textState.FontSize, ref descent) > 0)
+                        {
+                            textState.Descent = descent;
                         }
                     }
                 }

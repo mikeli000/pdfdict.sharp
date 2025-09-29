@@ -11,7 +11,8 @@ namespace PDFDict.SDK.Sharp.Core.Contents
         {
             { '0', '⁰' }, { '1', '¹' }, { '2', '²' }, { '3', '³' }, { '4', '⁴' },
             { '5', '⁵' }, { '6', '⁶' }, { '7', '⁷' }, { '8', '⁸' }, { '9', '⁹' },
-            //{ '+', '⁺' }, { '-', '⁻' }, { '=', '⁼' }, { '(', '⁽' }, { ')', '⁾' },
+            { '(', '⁽' }, { ')', '⁾' },
+            //{ '+', '⁺' }, { '-', '⁻' }, { '=', '⁼' },
             //{ 'n', 'ⁿ' }, { 'i', 'ⁱ' }
         };
 
@@ -19,7 +20,8 @@ namespace PDFDict.SDK.Sharp.Core.Contents
         {
             { '0', '₀' }, { '1', '₁' }, { '2', '₂' }, { '3', '₃' }, { '4', '₄' },
             { '5', '₅' }, { '6', '₆' }, { '7', '₇' }, { '8', '₈' }, { '9', '₉' },
-            //{ '+', '₊' }, { '-', '₋' }, { '=', '₌' }, { '(', '₍' }, { ')', '₎' },
+            { '(', '₍' }, { ')', '₎' },
+            //{ '+', '₊' }, { '-', '₋' }, { '=', '₌' }, 
             //{ 'a', 'ₐ' }, { 'e', 'ₑ' }, { 'o', 'ₒ' }, { 'x', 'ₓ' }, { 'h', 'ₕ' },
             //{ 'k', 'ₖ' }, { 'l', 'ₗ' }, { 'm', 'ₘ' }, { 'n', 'ₙ' }, { 'p', 'ₚ' },
             //{ 's', 'ₛ' }, { 't', 'ₜ' }
@@ -134,7 +136,7 @@ namespace PDFDict.SDK.Sharp.Core.Contents
         public bool TryMatchSupSub(string text, double originX, double originY, RectangleF bbox, GraphicsState gState, out string scriptChar)
         {
             scriptChar = text;
-            if (text.Trim().Length == 0 && text.Length < 5)
+            if (text.Trim().Length == 0 || text.Trim().Length > 5)
             {
                 return false;
             }
@@ -143,6 +145,11 @@ namespace PDFDict.SDK.Sharp.Core.Contents
             if (!charMatch) 
             {
                 return false;
+            }
+
+            if (_text.ToString() == "7" && text.StartsWith("("))
+            {
+                Console.WriteLine();
             }
 
             bool fontSizeMatch = false;
@@ -154,6 +161,7 @@ namespace PDFDict.SDK.Sharp.Core.Contents
                 {
                     fontSizeMatch = true;
                 }
+                Console.WriteLine();
             }
             if (!fontSizeMatch)
             {
@@ -211,10 +219,10 @@ namespace PDFDict.SDK.Sharp.Core.Contents
                 return true;
             }
 
-            if (!OnBaseline(originX, originY))
-            {
-                return false;
-            }
+            //if (!OnBaseline(originX, originY))
+            //{
+            //    return false;
+            //}
 
             if (!_gState.Equals(gState))
             {
